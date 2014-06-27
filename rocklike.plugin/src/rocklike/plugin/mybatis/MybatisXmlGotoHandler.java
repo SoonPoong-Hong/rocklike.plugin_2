@@ -5,7 +5,6 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -17,7 +16,6 @@ import org.eclipse.jface.viewers.ISelection;
 import rocklike.plugin.util.HongEclipseUtil;
 import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.HongMybatisHelper;
-import rocklike.plugin.util.HongMybatisHelper.MethodDeclarationResolverByName;
 import rocklike.plugin.util.HongMybatisHelper.MethodInvocationResolverByPosition;
 
 /**
@@ -53,10 +51,10 @@ public class MybatisXmlGotoHandler extends AbstractHandler {
 				if(implFile==null){
 					return null;
 				}
-				final String methodName = mi.getName().toString();
 				
 				CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
-				MethodDeclaration implMethod = MethodDeclarationResolverByName.resolve(implCu, methodName);
+//				MethodDeclaration implMethod = MethodDeclarationResolverByName.resolve(implCu, methodName);
+				MethodDeclaration implMethod = HongMybatisHelper.resolveImplMethod(implCu, mi.resolveMethodBinding());
 				if(implMethod!=null){
 					HongMybatisHelper.openMybatisXmlFile(proj, implMethod);
 				}

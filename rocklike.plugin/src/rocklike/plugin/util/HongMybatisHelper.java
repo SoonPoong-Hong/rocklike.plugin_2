@@ -1,11 +1,12 @@
 package rocklike.plugin.util;
 
-import java.io.IOException;
+import java.util.Arrays;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -104,38 +105,83 @@ public class HongMybatisHelper {
 	}
 	
 	
-	public static class MethodDeclarationResolverByName extends ASTVisitor{
+//	/**
+//	 * @deprecated 이건 삭제할 것임.
+//	 */
+//	public static class MethodDeclarationResolverByName extends ASTVisitor{
+//		private ObjectHolder<MethodDeclaration> holder = new ObjectHolder();
+//		private String methodName;
+//		private boolean finished = false;
+//		private CompilationUnit cu;
+//		
+//		public MethodDeclarationResolverByName(CompilationUnit cu, String methodName) {
+//			super();
+//			this.methodName = methodName;
+//			this.cu = cu;
+//		}
+//		
+//		public static MethodDeclaration resolve(CompilationUnit cu, String methodName){
+//			MethodDeclarationResolverByName v = new MethodDeclarationResolverByName(cu, methodName);
+//			cu.accept(v);
+//			return v.holder.get();
+//		}
+//
+//		@Override
+//		public boolean visit(MethodDeclaration node) {
+//			if(finished){
+//				return false;
+//			}
+//			String thisName = node.getName().toString();
+//			if(methodName.equals(thisName)){
+//				holder.put(node);
+//				finished = true;
+//				return false;
+//			}
+//			return super.visit(node);
+//		}
+//
+//		
+//	}
+	
+	
+	
+	public static MethodDeclaration resolveImplMethod(CompilationUnit cu, IMethodBinding methodBinding){
+		MethodImplResolver v = new MethodImplResolver(cu, methodBinding);
+		cu.accept(v);
+		return v.holder.get();
+	}
+	
+	private static class MethodImplResolver extends ASTVisitor{
 		private ObjectHolder<MethodDeclaration> holder = new ObjectHolder();
-		private String methodName;
+		private IMethodBinding intfMethod;
 		private boolean finished = false;
 		private CompilationUnit cu;
 		
-		public MethodDeclarationResolverByName(CompilationUnit cu, String methodName) {
+		public MethodImplResolver(CompilationUnit cu, IMethodBinding methodBinding) {
 			super();
-			this.methodName = methodName;
+			this.intfMethod = methodBinding;
 			this.cu = cu;
 		}
 		
-		public static MethodDeclaration resolve(CompilationUnit cu, String methodName){
-			MethodDeclarationResolverByName v = new MethodDeclarationResolverByName(cu, methodName);
-			cu.accept(v);
-			return v.holder.get();
-		}
-
+		
 		@Override
 		public boolean visit(MethodDeclaration node) {
 			if(finished){
 				return false;
 			}
-			String thisName = node.getName().toString();
-			if(methodName.equals(thisName)){
-				holder.put(node);
-				finished = true;
-				return false;
+			// 메소드명이 똑같고, 파라미터 타입도 똑같을때
+			if(intfMethod.getName().equals(node.resolveBinding().getName())){
+				String[] intfParams = ((IMethod)intfMethod.getJavaElement()).getParameterTypes(); 
+				String[] thisParams = ((IMethod)(node.resolveBinding().getJavaElement())).getParameterTypes(); 
+				if(Arrays.equals(intfParams, thisParams)){
+					holder.put(node);
+					finished = true;
+					return false;
+				}
 			}
 			return super.visit(node);
 		}
-
+		
 		
 	}
 	

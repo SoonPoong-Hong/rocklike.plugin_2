@@ -25,7 +25,6 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -42,7 +41,6 @@ import rocklike.plugin.util.HongEditorHelper;
 import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.HongMybatisHelper;
 import rocklike.plugin.util.HongMybatisHelper.IFileAndId;
-import rocklike.plugin.util.HongMybatisHelper.MethodDeclarationResolverByName;
 
 public class JavaEditorListeningView extends ViewPart {
 
@@ -174,7 +172,8 @@ public class JavaEditorListeningView extends ViewPart {
 									return;
 								}
 								CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
-								MethodDeclaration implMethod = MethodDeclarationResolverByName.resolve(implCu, mb.getName());
+//								MethodDeclaration implMethod = MethodDeclarationResolverByName.resolve(implCu, mb.getName());
+								MethodDeclaration implMethod = HongMybatisHelper.resolveImplMethod(implCu, mb);
 								final IFileAndId ifileAndId = HongMybatisHelper.ExtractMybatisXmlFileAndId.execute(implFile.getProject(), implMethod);
 								
 								if(ifileAndId!=null && ifileAndId.inputParam!=null && ifileAndId.ifile!=null && ifileAndId.id==null){
