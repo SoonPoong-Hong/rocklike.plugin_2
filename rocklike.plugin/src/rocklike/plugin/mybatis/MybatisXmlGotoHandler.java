@@ -18,9 +18,8 @@ import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.HongMybatisHelper;
 
 /**
- * Our sample handler extends AbstractHandler, an IHandler base class.
- * @see org.eclipse.core.commands.IHandler
- * @see org.eclipse.core.commands.AbstractHandler
+ * @author Hong SoonPoong (rocklike@gmail.com)
+ * @date 2014. 7. 5.
  */
 public class MybatisXmlGotoHandler extends AbstractHandler {
 	/**

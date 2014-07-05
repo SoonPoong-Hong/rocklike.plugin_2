@@ -17,9 +17,12 @@ import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 
+/**
+ * @author hong
+ * @date 2014. 7. 5.
+ */
 public class HongEclipseFileHelper {
-	
-
+ 
 	public static IWorkspaceRoot getWorkspaceRoot(){
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();

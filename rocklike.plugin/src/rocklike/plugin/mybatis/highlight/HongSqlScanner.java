@@ -18,6 +18,10 @@ import org.eclipse.swt.SWT;
 
 import rocklike.plugin.mybatis.highlight.scanner.HongColorProvider;
 
+/**
+ * @author Hong SoonPoong (rocklike@gmail.com)
+ * @date 2014. 7. 5.
+ */
 public class HongSqlScanner extends RuleBasedScanner{
 	private static final String[] sql_keywords = {"select", "from", "order", "by", "asc", "des", "where"
 												 , "update", "delete", "set"

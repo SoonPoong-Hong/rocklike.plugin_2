@@ -1,8 +1,5 @@
 package rocklike.plugin.util;
 
-
-
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +32,10 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.ide.ResourceUtil;
 
+/**
+ * @author Hong SoonPoong (rocklike@gmail.com)
+ * @date 2014. 7. 5.
+ */
 public class HongJdtHelper {
 
 	public static IJavaProject getActiveEditorsJavaProject(){

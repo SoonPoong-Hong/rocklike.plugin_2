@@ -27,6 +27,10 @@ import org.eclipse.ui.services.IServiceLocator;
 import rocklike.plugin.HongPluginActivator;
 
 
+/**
+ * @author Hong SoonPoong (rocklike@gmail.com)
+ * @date 2014. 7. 5.
+ */
 public class HongEclipseUtil {
 
     public static IEditorPart getActiveEditor() {

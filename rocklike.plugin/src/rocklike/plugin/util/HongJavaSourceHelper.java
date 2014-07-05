@@ -10,6 +10,10 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
+/**
+ * @author Hong SoonPoong (rocklike@gmail.com)
+ * @date 2014. 7. 5.
+ */
 public class HongJavaSourceHelper {
 	public void addImport(ICompilationUnit icu, String importStr) throws JavaModelException{
 		icu.createImport(importStr, null, null);
