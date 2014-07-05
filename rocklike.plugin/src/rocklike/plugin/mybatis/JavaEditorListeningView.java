@@ -9,6 +9,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -37,6 +43,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import rocklike.plugin.mybatis.highlight.MybatisSourceViewerConfiguration;
 import rocklike.plugin.mybatis.highlight.scanner.HongColorProvider;
+import rocklike.plugin.util.HongEclipseUtil;
 import rocklike.plugin.util.HongEditorHelper;
 import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.HongMybatisHelper;
@@ -65,7 +72,7 @@ public class JavaEditorListeningView extends ViewPart {
 		
 		executor = new ThreadPoolExecutor(
 				  1
-				, 5
+				, 3
 				, 10L
 				, TimeUnit.SECONDS
 				, new LinkedBlockingQueue<Runnable>()
@@ -146,72 +153,156 @@ public class JavaEditorListeningView extends ViewPart {
 				return;
 			}
 
-			executor.execute( new Runnable(){
-				@Override
-				public void run() {
-					if(sel instanceof ITextSelection){
-						ITextSelection ts = (ITextSelection)sel;
-
-						CompilationUnitEditor cud = (CompilationUnitEditor)part;
-						IFile ifile = (IFile)cud.getEditorInput().getAdapter(IFile.class);
-						CompilationUnit cu = HongJdtHelper.getCompilationUnit(ifile);
-						MethodInvocation mi = HongMybatisHelper.MethodInvocationResolverByPosition.resolve(cu, ts.getOffset()+ts.getLength());
-						if(mi!=null){
-							final IMethodBinding mb = mi.resolveMethodBinding();
-							final ITypeBinding tb = mb.getDeclaringClass();
-							if(tb.getPackage().getName().endsWith(".dao")){
-								IFile implFile = HongMybatisHelper.assumeDaoImplPath(ifile.getProject(), (IFile)tb.getJavaElement().getResource());
-								if(implFile==null){
-									Display.getDefault().syncExec(new Runnable(){
-										@Override
-										public void run() {
-											t.setText("");
-											sourceViewer.getTextWidget().setText("");
-										}
-									});									
-									return;
-								}
-								CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
-//								MethodDeclaration implMethod = MethodDeclarationResolverByName.resolve(implCu, mb.getName());
-								MethodDeclaration implMethod = HongMybatisHelper.resolveImplMethod(implCu, mb);
-								final IFileAndId ifileAndId = HongMybatisHelper.ExtractMybatisXmlFileAndId.execute(implFile.getProject(), implMethod);
-								
-								if(ifileAndId!=null && ifileAndId.inputParam!=null && ifileAndId.ifile!=null && ifileAndId.id==null){
-									Display.getDefault().syncExec(new Runnable(){
-										@Override
-										public void run() {
-											t.setText(ifileAndId.inputParam); 
-											sourceViewer.getTextWidget().setText("");
-										}
-									});
-									
-								}else if(ifileAndId!=null && ifileAndId.ifile!=null && ifileAndId.id!=null){
-									selectedProj = implFile.getProject();
-									IFile xmlFile = ifileAndId.ifile;
-									String id = ifileAndId.id;
-									try {
-										final String contents = HongEditorHelper.getXmlContentsIncludingRef(xmlFile, id);
-										Display.getDefault().syncExec(new Runnable(){
-											@Override
-											public void run() {
-												t.setText(ifileAndId.inputParam); 
-												sourceViewer.getTextWidget().setText(contents);
-											}
-										});
-									} catch (Exception e) {
-										e.printStackTrace();
-									}
-								}
-								
-							}
-						}
-					}
-				}
-			});
+			executor.execute( new LinkJobRunnable(sel, part) );
 		}
 	};
 	
 	
 	
+	private class LinkJobRunnable implements Runnable{
+		private ISelection sel;
+		private IWorkbenchPart part;
 
+		public LinkJobRunnable(ISelection sel, IWorkbenchPart part) {
+	        super();
+	        this.sel = sel;
+	        this.part = part;
+        }
+
+		@Override
+        public void run() {
+			if(sel instanceof ITextSelection){
+				ITextSelection ts = (ITextSelection)sel;
+				CompilationUnitEditor cud = (CompilationUnitEditor)part;
+				IFile ifile = (IFile)cud.getEditorInput().getAdapter(IFile.class);
+				selectedProj = ifile.getProject();
+				ICompilationUnit icu = JavaCore.createCompilationUnitFrom(ifile);
+				int pos = ts.getOffset() + ts.getLength();
+				
+				try {
+	                IJavaElement je = icu.getElementAt(pos);
+	                boolean isProcessed = false;
+	                if(je instanceof IMethod){
+	    				IMethod m = (IMethod) je;
+	    				IType type = (IType) m.getParent();
+	    				String name = type.getFullyQualifiedName();
+//	    				System.out.printf("== full type name : %s \n", name);
+	    				
+	    				if(name.indexOf(".dao.")>-1){
+	    					isProcessed = true;
+	    					runInDao();
+	    				}
+	    				
+	                }
+	                if(!isProcessed){
+	                	runInService();
+	                }
+	                
+                } catch (JavaModelException e) {
+	                e.printStackTrace();
+                }
+				
+			}
+		} // end run
+		
+		
+		void runInDao() throws JavaModelException{
+			ITextSelection ts = (ITextSelection)sel;
+			
+			CompilationUnitEditor cud = (CompilationUnitEditor)part;
+			IFile ifile = (IFile)cud.getEditorInput().getAdapter(IFile.class);
+			ICompilationUnit icu = JavaCore.createCompilationUnitFrom(ifile);
+			int pos = ts.getOffset() + ts.getLength();
+			
+			IMethod m = (IMethod) icu.getElementAt(pos);
+			IType type = (IType) m.getParent();
+			String name = type.getFullyQualifiedName();
+//			System.out.printf("== full type name : %s \n", name);
+			
+			if(name.indexOf(".dao.")==-1){
+				return;
+			}
+			
+			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
+			if(!type.isInterface()){
+				CompilationUnit implCu = cu;
+				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, m);
+				final IFileAndId ifileAndId = HongMybatisHelper.extractMybatisXmlFileAndId(icu.getResource().getProject(), implMethod);
+//				System.out.printf("== (impl) %s , %s , %s \n", ifileAndId.id , ifileAndId.inputParam , ifileAndId.ifile);
+				exeIFileAndId(ifileAndId);
+			}else{
+				IFile implFile = HongMybatisHelper.assumeDaoImplPath(icu.getResource().getProject(), (IFile) icu.getResource().getAdapter(IFile.class));
+				CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
+				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, m);
+				final IFileAndId ifileAndId = HongMybatisHelper.extractMybatisXmlFileAndId(implFile.getProject(), implMethod);
+//				System.out.printf("== (interface) %s , %s , %s \n", ifileAndId.id , ifileAndId.inputParam , ifileAndId.ifile);
+				exeIFileAndId(ifileAndId);
+			}
+		}
+		
+		
+		
+		void runInService(){
+			ITextSelection ts = (ITextSelection)sel;
+
+			CompilationUnitEditor cud = (CompilationUnitEditor)part;
+			IFile ifile = (IFile)cud.getEditorInput().getAdapter(IFile.class);
+			CompilationUnit cu = HongJdtHelper.getCompilationUnit(ifile);
+			int pos = ts.getOffset() + ts.getLength();
+			MethodInvocation mi = HongJdtHelper.resolveMethodInvocationByPosition(cu, pos);
+			
+			if(mi!=null){
+				final IMethodBinding mb = mi.resolveMethodBinding();
+				final ITypeBinding tb = mb.getDeclaringClass();
+				if(tb.getPackage().getName().endsWith(".dao")){
+					IFile implFile = HongMybatisHelper.assumeDaoImplPath(ifile.getProject(), (IFile)tb.getJavaElement().getResource());
+					if(implFile==null){
+						Display.getDefault().syncExec(new Runnable(){
+							@Override
+							public void run() {
+								t.setText("");
+								sourceViewer.getTextWidget().setText("");
+							}
+						});									
+						return;
+					}
+					CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
+					MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, mb);
+					final IFileAndId ifileAndId = HongMybatisHelper.extractMybatisXmlFileAndId(implFile.getProject(), implMethod);
+					
+					exeIFileAndId(ifileAndId);
+				}
+			}
+		}
+		
+		
+		private void exeIFileAndId(final IFileAndId ifileAndId){
+			if(ifileAndId!=null && ifileAndId.inputParam!=null && ifileAndId.ifile!=null && ifileAndId.id==null){
+				Display.getDefault().syncExec(new Runnable(){
+					@Override
+					public void run() {
+						t.setText(ifileAndId.inputParam); 
+						sourceViewer.getTextWidget().setText("");
+					}
+				});
+				
+			}else if(ifileAndId!=null && ifileAndId.ifile!=null && ifileAndId.id!=null){
+				IFile xmlFile = ifileAndId.ifile;
+				String id = ifileAndId.id;
+				try {
+					final String contents = HongEditorHelper.getXmlContentsIncludingRef(xmlFile, id);
+					Display.getDefault().syncExec(new Runnable(){
+						@Override
+						public void run() {
+							t.setText(ifileAndId.inputParam); 
+							sourceViewer.getTextWidget().setText(contents);
+						}
+					});
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
 }

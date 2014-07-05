@@ -4,9 +4,14 @@ import java.util.Arrays;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IField;
+import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -143,51 +148,18 @@ public class HongMybatisHelper {
 //		
 //	}
 	
-	
-	
-	public static MethodDeclaration resolveImplMethod(CompilationUnit cu, IMethodBinding methodBinding){
-		MethodImplResolver v = new MethodImplResolver(cu, methodBinding);
-		cu.accept(v);
-		return v.holder.get();
-	}
-	
-	private static class MethodImplResolver extends ASTVisitor{
-		private ObjectHolder<MethodDeclaration> holder = new ObjectHolder();
-		private IMethodBinding intfMethod;
-		private boolean finished = false;
-		private CompilationUnit cu;
-		
-		public MethodImplResolver(CompilationUnit cu, IMethodBinding methodBinding) {
-			super();
-			this.intfMethod = methodBinding;
-			this.cu = cu;
-		}
-		
-		
-		@Override
-		public boolean visit(MethodDeclaration node) {
-			if(finished){
-				return false;
-			}
-			// 메소드명이 똑같고, 파라미터 타입도 똑같을때
-			if(intfMethod.getName().equals(node.resolveBinding().getName())){
-				String[] intfParams = ((IMethod)intfMethod.getJavaElement()).getParameterTypes(); 
-				String[] thisParams = ((IMethod)(node.resolveBinding().getJavaElement())).getParameterTypes(); 
-				if(Arrays.equals(intfParams, thisParams)){
-					holder.put(node);
-					finished = true;
-					return false;
-				}
-			}
-			return super.visit(node);
-		}
-		
-		
-	}
-	
 
 	
-	public static class ExtractMybatisXmlFileAndId extends ASTVisitor{
+	public static IFileAndId extractMybatisXmlFileAndId(IProject proj, MethodDeclaration md){
+		if(md==null){
+			return null;
+		}
+		ExtractMybatisXmlFileAndId v = new ExtractMybatisXmlFileAndId(proj, md);
+		md.accept(v);
+		return new IFileAndId(v.resultFile, v.resultId, v.inputParam);
+	}
+	
+	private static class ExtractMybatisXmlFileAndId extends ASTVisitor{
 		private IProject proj;
 		private MethodDeclaration md;
 		private IFile resultFile;
@@ -198,15 +170,6 @@ public class HongMybatisHelper {
 			super();
 			this.proj = proj;
 			this.md = md;
-		}
-		
-		public static IFileAndId execute(IProject proj, MethodDeclaration md){
-			if(md==null){
-				return null;
-			}
-			ExtractMybatisXmlFileAndId v = new ExtractMybatisXmlFileAndId(proj, md);
-			md.accept(v);
-			return new IFileAndId(v.resultFile, v.resultId, v.inputParam);
 		}
 		
 		@Override
@@ -232,7 +195,6 @@ public class HongMybatisHelper {
 			}
 			return true;
 		}
-		
 	}
 	
 	public static class IFileAndId{
@@ -267,7 +229,7 @@ public class HongMybatisHelper {
 		if(md==null){
 			return;
 		}
-		IFileAndId result = ExtractMybatisXmlFileAndId.execute(proj, md);
+		IFileAndId result = extractMybatisXmlFileAndId(proj, md);
 		if(result==null){
 			return;
 		}
@@ -278,35 +240,8 @@ public class HongMybatisHelper {
 		}
 	}
 	
-	
-	public static class MethodInvocationResolverByPosition extends ASTVisitor{
-		private CompilationUnit cu;
-		private ObjectHolder<MethodInvocation> holder = new ObjectHolder();
-		private int pos ;
 
-		private MethodInvocationResolverByPosition(CompilationUnit cu, int pos) {
-			super();
-			this.cu = cu;
-			this.pos = pos;
-		}
-		
-		public static MethodInvocation resolve(CompilationUnit cu, int pos){
-			MethodInvocationResolverByPosition v = new MethodInvocationResolverByPosition(cu, pos);
-			cu.accept(v);
-			return v.holder.get();
-		}
 
-		@Override
-		public boolean visit(MethodInvocation node) {
-			// [주의] 안에 있는 메소드까지 다 검사해야 하기 때문에, 발견했다고 false를 리턴하면 안됨.
-			int start = node.getStartPosition();
-			int end = start + node.getLength();
-			if(start<=pos && pos<end){
-				holder.put(node);
-			}
-			return true;
-		}
-	}
 	
 	
 	

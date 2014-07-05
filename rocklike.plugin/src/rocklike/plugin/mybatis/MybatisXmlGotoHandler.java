@@ -16,7 +16,6 @@ import org.eclipse.jface.viewers.ISelection;
 import rocklike.plugin.util.HongEclipseUtil;
 import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.HongMybatisHelper;
-import rocklike.plugin.util.HongMybatisHelper.MethodInvocationResolverByPosition;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -43,7 +42,7 @@ public class MybatisXmlGotoHandler extends AbstractHandler {
 		ISelection sel = HongEclipseUtil.getSelection();
 		if(sel instanceof ITextSelection){
 			ITextSelection ts = (ITextSelection)sel;
-			MethodInvocation mi = MethodInvocationResolverByPosition.resolve(cu, ts.getOffset()+ts.getLength());
+			MethodInvocation mi = HongJdtHelper.resolveMethodInvocationByPosition(cu, ts.getOffset()+ts.getLength());
 			if(mi!=null){
 				ITypeBinding tb = mi.resolveMethodBinding().getDeclaringClass();
 				IFile interfaceFile = (IFile)tb.getJavaElement().getResource();
@@ -53,8 +52,7 @@ public class MybatisXmlGotoHandler extends AbstractHandler {
 				}
 				
 				CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
-//				MethodDeclaration implMethod = MethodDeclarationResolverByName.resolve(implCu, methodName);
-				MethodDeclaration implMethod = HongMybatisHelper.resolveImplMethod(implCu, mi.resolveMethodBinding());
+				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, mi.resolveMethodBinding());
 				if(implMethod!=null){
 					HongMybatisHelper.openMybatisXmlFile(proj, implMethod);
 				}
