@@ -178,12 +178,10 @@ public class HongMessagePopupUtil {
      * @return
      * @throws Exception
      */
-    public static IViewPart openActivePageAnotherView(String viewId, String SecondaryId) throws Exception {
-        IWorkbench wb = PlatformUI.getWorkbench();
-        return wb.getActiveWorkbenchWindow().getActivePage()
-        .showView(viewId, SecondaryId, 
-                IWorkbenchPage.VIEW_ACTIVATE);
-    }
+	public static IViewPart openActivePageAnotherView(String viewId, String SecondaryId) throws Exception {
+		IWorkbench wb = PlatformUI.getWorkbench();
+		return wb.getActiveWorkbenchWindow().getActivePage().showView(viewId, SecondaryId, IWorkbenchPage.VIEW_ACTIVATE);
+	}
     
     
     /**

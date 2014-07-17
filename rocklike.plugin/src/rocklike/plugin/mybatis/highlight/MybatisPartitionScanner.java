@@ -10,10 +10,6 @@ import org.eclipse.jface.text.rules.MultiLineRule;
 import org.eclipse.jface.text.rules.RuleBasedPartitionScanner;
 import org.eclipse.jface.text.rules.Token;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2014. 7. 5.
- */
 public class MybatisPartitionScanner extends RuleBasedPartitionScanner {
 	public static final String XML_CDATA = "__hong_xmlcdata";
 	public static final String XML_COMMENT = "__hong_xmlcomment";

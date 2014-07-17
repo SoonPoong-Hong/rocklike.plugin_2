@@ -23,10 +23,6 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2014. 7. 5.
- */
 public class HongMybatisHelper {
 	
 

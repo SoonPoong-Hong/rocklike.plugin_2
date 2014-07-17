@@ -45,6 +45,25 @@
             id="mybatisXmlGotoCommand"
             name="Mybatis Xml 열기">
       </command>
+      <command
+            id="rocklike.plugin.methodCall.viewer.show"
+            name="메소드 호출관계 보기">
+      </command>
+      <command
+            defaultHandler="rocklike.plugin.handlers.ResourceRefreshHandler"
+            id="rocklike.plugin.refresh_resource.command"
+            name="폴더 refresh하기">
+      </command>
+      <command
+            defaultHandler="rocklike.plugin.handlers.RefreshFolderAssignHandler"
+            id="rocklike.plugin.refresh.setRefreshFolder"
+            name="refresh할 폴더 지정하기">
+      </command>
+      <command
+            defaultHandler="rocklike.plugin.handlers.ShowRefreshFolderList"
+            id="rocklike.plugin.refresh.showRefreshFolderList"
+            name="refresh할 폴더 목록 보여주기">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -63,6 +82,10 @@
       <handler
             class="rocklike.plugin.mybatis.MybatisXmlGotoHandler"
             commandId="mybatisXmlGotoCommand">
+      </handler>
+      <handler
+            class="rocklike.plugin.jdt.MethodCallShowHandler"
+            commandId="rocklike.plugin.methodCall.viewer.show">
       </handler>
    </extension>
    <extension
@@ -279,7 +302,7 @@
          </parameter>
       </key>
       <key
-            commandId="mybatisXmlGotoCommand"
+            commandId="rocklike.plugin.methodCall.viewer.show"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+M3+H">
@@ -307,6 +330,11 @@
                   label="테스트"
                   mnemonic="S">
             </command>
+            <command
+                  commandId="rocklike.plugin.refresh.showRefreshFolderList"
+                  label="refresh할 폴더 목록 보여주기"
+                  style="push">
+            </command>
          </menu>
       </menuContribution>
       <menuContribution
@@ -322,6 +350,11 @@
             <command
                   commandId="rocklike.plugin.explorer.CopyFilePath"
                   label="파일경로 복사"
+                  style="push">
+            </command>
+            <command
+                  commandId="rocklike.plugin.refresh.setRefreshFolder"
+                  label="refresh할 경로 지정"
                   style="push">
             </command>
          </menu>
@@ -358,7 +391,24 @@
                   label="파일경로 복사"
                   style="push">
             </command>
+            <command
+                  commandId="rocklike.plugin.refresh.setRefreshFolder"
+                  label="refresh할 경로 지정"
+                  style="push">
+            </command>
          </menu>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar
+               id="rocklike.plugin.mainmenu.toolbar">
+            <command
+                  commandId="rocklike.plugin.refresh_resource.command"
+                  icon="icons/refresh.gif"
+                  style="push">
+            </command>
+         </toolbar>
       </menuContribution>
       <!--
       <menuContribution
@@ -399,6 +449,12 @@
             class="rocklike.plugin.mybatis.JavaEditorListeningView"
             id="hong.pluginTest.jdt.SelectionView"
             name="mybatis xml viewer"
+            restorable="true">
+      </view>
+      <view
+            class="rocklike.plugin.jdt.viewer.MethodCallTreeViewer"
+            id="rocklike.jdt.methodCall.viewer"
+            name="메소드 호출 보기"
             restorable="true">
       </view>
    </extension>

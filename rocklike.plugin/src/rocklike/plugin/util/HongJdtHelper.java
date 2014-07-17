@@ -1,5 +1,8 @@
 package rocklike.plugin.util;
 
+
+
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,15 +30,17 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.ide.ResourceUtil;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2014. 7. 5.
- */
+import rocklike.plugin.jdt.CacheSupportCompilationUnit;
+import rocklike.plugin.jdt.CacheSupportTypeHierarchyResolver;
+import rocklike.plugin.jdt.CachedMethodDeclarationHolder;
+
 public class HongJdtHelper {
 
 	public static IJavaProject getActiveEditorsJavaProject(){
@@ -68,7 +73,6 @@ public class HongJdtHelper {
 	
 	public static CompilationUnit getCompilationUnit(IFile f){
 		return getCompilationUnit( JavaCore.createCompilationUnitFrom(f) );
-		
 	}
 	
 	public static CompilationUnit getCompilationUnit(ICompilationUnit icu){
@@ -171,21 +175,58 @@ public class HongJdtHelper {
 		}
 		IType mtype = interfaceMethod.getDeclaringType();
 		try {
+			long start = System.currentTimeMillis();
+			long end = 0;
 			ITypeHierarchy th = mtype.newTypeHierarchy(interfaceMethod.getJavaProject(), null);
+			end = System.currentTimeMillis();
+			System.out.printf("== newTypeHierarchy (%s) \n", (end-start));
 			IType[] types = th.getSubtypes(mtype);
 			for(IType t : types){
 				MethodDeclaration md = resolveMethodInImpl(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
 				if(md!=null){
+					end = System.currentTimeMillis();
+					System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
 					return md;
 				}
 			}
+			end = System.currentTimeMillis();
+			System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 	
-	public static MethodDeclaration resolveMethodInImpl(CompilationUnit implCu, IMethod searchMethod){
+	
+	public static MethodDeclaration resolveImplMethodOfDirectOfCached(IMethod interfaceMethod){
+		if(interfaceMethod==null){
+			return null;
+		}
+		IType mtype = interfaceMethod.getDeclaringType();
+		try {
+			long start = System.currentTimeMillis();
+			long end = 0;
+			ITypeHierarchy th =   CacheSupportTypeHierarchyResolver.get().resolvedCachedTypeHierarchy(interfaceMethod.getJavaProject(), mtype);
+			end = System.currentTimeMillis();
+			System.out.printf("== newTypeHierarchy (%s) \n", (end-start));
+			IType[] types = th.getSubtypes(mtype);
+			for(IType t : types){
+				MethodDeclaration md = resolveMethodInImpl(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
+				if(md!=null){
+					end = System.currentTimeMillis();
+					System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
+					return md;
+				}
+			}
+			end = System.currentTimeMillis();
+			System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
+		} catch (JavaModelException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static MethodDeclaration resolveMethodInImpl(ASTNode implCu, IMethod searchMethod){
 		if(implCu==null || searchMethod==null){
 			return null;
 		}
@@ -194,7 +235,7 @@ public class HongJdtHelper {
 		return v.holder.get();
 	}
 	
-	public static MethodDeclaration resolveMethodInImpl(CompilationUnit implCu, IMethodBinding searchMethodBinding){
+	public static MethodDeclaration resolveMethodInImpl(ASTNode implCu, IMethodBinding searchMethodBinding){
 		if(implCu==null || searchMethodBinding==null){
 			return null;
 		}
@@ -273,5 +314,211 @@ public class HongJdtHelper {
 	
 	
 	
+	
+
+	
+	public static  MethodDeclaration getSelectedElementOfMethodDeclaration(){
+		ISelection sel = HongEclipseUtil.getSelection();
+		final ObjectHolder<MethodDeclaration> oh = new ObjectHolder();
+		if(sel instanceof ITextSelection){
+			final ITextSelection ts = (ITextSelection)sel;
+			final int pos = ts.getOffset() + ts.getLength();
+			IFile ifile = ResourceUtil.getFile(HongEclipseUtil.getActiveEditor().getEditorInput());
+			ICompilationUnit icu = JavaCore.createCompilationUnitFrom(ifile);
+			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
+			cu.accept(new ASTVisitor(){
+				@Override
+                public boolean visit(MethodDeclaration node) {
+					if(node.getStartPosition()<=pos && pos<node.getStartPosition()+node.getLength()){
+						oh.put(node);
+					}
+					return true;
+                }
+			});
+		}
+		return oh.get();
+	}
+	
+	
+	/**
+	 * 메소드 invocation이라면 그 invocation의 declaration을 쓰고, 아니면, 해당 메소드 declaration을 가져온다.
+	 * @return
+	 */
+	public static  MethodDeclaration resolveSelectedMethodDeclarationRegardingMethodInvocation(){
+		MethodInvocation mi = getSelectedElementOfMethodInvocation();
+		if(mi!=null){
+			// 메소드 호출일때
+			// 먼저 impl에서 찾고
+			MethodDeclaration md ;
+			IMethod m = (IMethod) mi.resolveMethodBinding().getJavaElement();
+			md = resolveImplMethodOfDirect(m);
+			if(md!=null){
+				return md;
+			}
+			
+			// impl에 없으면 자신에게서 찾기
+			CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
+			md = resolveMethodInImpl(cu, m );
+			if(md!=null){
+				return md;
+			}
+			
+		}else{
+			// 메소드 호출이 아니면, 그것을 둘러싸는 메소드 invocation을 리턴
+			MethodDeclaration md = getSelectedElementOfMethodDeclaration();
+			if(md!=null){
+				return md;
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	public static MethodDeclaration getSelectedElementOfMethodInvocationRegardingInterface(){
+		MethodInvocation mi = getSelectedElementOfMethodInvocation();
+		if(mi==null){
+			return null;
+		}
+		
+		// 먼저 impl에서 찾고
+		MethodDeclaration md ;
+		IMethod m = (IMethod) mi.resolveMethodBinding().getJavaElement();
+		md = resolveImplMethodOfDirect(m);
+		if(md!=null){
+			return md;
+		}
+
+		// impl에 없으면 자신에게서 찾기
+		CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
+		md = resolveMethodInImpl(cu, m );
+		if(md!=null){
+			return md;
+		}
+		
+		return null;
+	}
+	
+	
+	public  MethodDeclaration getSelectedElementOfMethodDeclarationAdvanced() throws JavaModelException{
+		ISelection sel = HongEclipseUtil.getSelection();
+		final ObjectHolder<MethodDeclaration> oh = new ObjectHolder();
+		if(sel instanceof ITextSelection){
+			final ITextSelection ts = (ITextSelection)sel;
+			final int pos = ts.getOffset() + ts.getLength();
+			IFile ifile = ResourceUtil.getFile(HongEclipseUtil.getActiveEditor().getEditorInput());
+			ICompilationUnit icu = JavaCore.createCompilationUnitFrom(ifile);
+			IJavaElement je = icu.getElementAt(pos);
+			if(!(je instanceof IMethod)){
+				return null;
+			}
+			IMethod m = (IMethod)je;
+			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
+			MethodDeclaration md = (MethodDeclaration) cu.findDeclaringNode(m.getKey());
+			
+			if(md==null){
+				return null;
+			}
+			
+			md.accept(new ASTVisitor(){
+				@Override
+				public boolean visit(MethodDeclaration node) {
+					if(node.getStartPosition()<=pos && pos<node.getStartPosition()+node.getLength()){
+						oh.put(node);
+					}
+					return true;
+				}
+			});
+		}
+		return oh.get();
+	}
+	
+	
+	
+	//=========== 추가할 소스
+	
+	public static  MethodDeclaration resolveMethodDeclaration(MethodInvocation mi){
+//		System.out.printf("====  resolveMethodDeclaration 시작 \n");
+		long start = System.currentTimeMillis();
+		long end = 0;
+		if(mi!=null){
+			// 메소드 호출일때
+			// 먼저 impl에서 찾고
+			MethodDeclaration md ;
+			IMethod m = (IMethod) mi.resolveMethodBinding().getJavaElement();
+			md = resolveImplMethodOfDirect(m);
+			end = System.currentTimeMillis();
+//			System.out.printf("= 0 (%s) \n", (end-start));
+			
+			if(md!=null){
+				return md;
+			}
+			
+			// impl에 없으면 자신에게서 찾기
+			CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
+			end = System.currentTimeMillis();
+//			System.out.printf("= 1-1 (%s) \n", (end-start));
+			md = resolveMethodInImpl(cu, m );
+			end = System.currentTimeMillis();
+//			System.out.printf("= 1-2 (%s) \n", (end-start));
+			end = System.currentTimeMillis();
+//			System.out.printf("= 1-3 (%s) \n", (end-start));
+			if(md!=null){
+				return md;
+			}
+		}
+		
+//		System.out.printf("====  resolveMethodDeclaration 땡. \n");
+		return null;
+	}
+	
+	
+	public static  MethodDeclaration resolveMethodDeclarationCached(MethodInvocation mi){
+//		System.out.printf("====  resolveMethodDeclaration 시작 (%s)\n", mi.getName());
+		long start = System.currentTimeMillis();
+		long end = 0;
+		if(mi!=null){
+			// 메소드 호출일때
+			// 먼저 impl에서 찾고
+			MethodDeclaration md ;
+			IMethod m = (IMethod) mi.resolveMethodBinding().getJavaElement();
+			
+			MethodDeclaration cachedMD = CachedMethodDeclarationHolder.get().get(m);
+			if(cachedMD!=null){
+				return cachedMD;
+			}
+			
+			md = resolveImplMethodOfDirectOfCached(m);
+			end = System.currentTimeMillis();
+//			System.out.printf("= 0 (%s) \n", (end-start));
+			
+			if(md!=null){
+				CachedMethodDeclarationHolder.get().put(m, md);
+				return md;
+			}
+			
+			// impl에 없으면 자신에게서 찾기
+			CompilationUnit cu = CacheSupportCompilationUnit.get().getCompilationUnit((IFile)m.getResource());
+			end = System.currentTimeMillis();
+//			System.out.printf("= 1-1 (%s) \n", (end-start));
+			md = resolveMethodInImpl(cu, m );
+			end = System.currentTimeMillis();
+//			System.out.printf("= 1-2 (%s) \n", (end-start));
+			end = System.currentTimeMillis();
+//			System.out.printf("= 1-3 (%s) \n", (end-start));
+			if(md!=null){
+				CachedMethodDeclarationHolder.get().put(m, md);
+				return md;
+			}
+		}
+		
+//		System.out.printf("====  resolveMethodDeclaration 땡. \n");
+		return null;
+	}
+
+	
+	public static void openInJavaEditor(IJavaElement javaElement) throws PartInitException, JavaModelException{
+		JavaUI.openInEditor(javaElement);
+	}
 	
 }

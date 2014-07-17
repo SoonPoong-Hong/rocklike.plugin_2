@@ -8,10 +8,6 @@ import org.eclipse.swt.widgets.Display;
 
 import rocklike.plugin.util.HongEclipseUtil;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2013.
- */
 public class HongCreateBookmarkHandler extends AbstractHandler {
 
 

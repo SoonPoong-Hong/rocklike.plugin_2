@@ -8,7 +8,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -18,19 +17,14 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.ide.ResourceUtil;
 import org.eclipse.ui.services.IServiceLocator;
 
-import rocklike.plugin.HongPluginActivator;
 
-
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2014. 7. 5.
- */
 public class HongEclipseUtil {
 
     public static IEditorPart getActiveEditor() {
@@ -106,7 +100,6 @@ public class HongEclipseUtil {
 		if(isUiThread()){
 			ISelectionService service = getSelectionService();
 			ISelection sel = service.getSelection();
-//			System.out.printf("== ISelection [%s] \n", sel);
 			return sel;
 			
 		}else{
@@ -123,6 +116,16 @@ public class HongEclipseUtil {
 		}
 	}
 
+	
+	public static ITextSelection getTextSelection(){
+		ISelection sel = getSelection();
+		if(sel instanceof ITextSelection){
+			return (ITextSelection)sel;
+		}
+		return null;
+	}
+	
+	
 	public static ISelectionService getSelectionService(){
 		return getActiveWorkbenchWindow().getSelectionService();
 	}
@@ -271,10 +274,33 @@ public class HongEclipseUtil {
 		}else{
 			if(isel instanceof IStructuredSelection){
 				IStructuredSelection thisSel = (IStructuredSelection)isel;
+				if(thisSel instanceof IResource){
+					return ((IResource)thisSel).getProject();
+				}
 				IResource res = (IResource)Platform.getAdapterManager().getAdapter(thisSel.getFirstElement(), IResource.class);
 				return res.getProject();
 			}
 		}
 		return null;
 	}
+	
+	
+	public static IViewPart showView(String id){
+		try {
+	        return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(id);
+        } catch (PartInitException e) {
+	        e.printStackTrace();
+	        return null;
+        }
+	}
+	
+//	public static IViewPart getView(String id){
+//		try {
+//			return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().se
+//		} catch (PartInitException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
+//		
+//	}
 }

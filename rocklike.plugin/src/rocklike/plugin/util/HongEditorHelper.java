@@ -29,10 +29,6 @@ import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2014. 7. 5.
- */
 public class HongEditorHelper {
 	
 	public static ITextEditor findTextEditor(IEditorPart editorPart) {   // => XML multi page인 경우에, text editor로 열리게.
@@ -49,7 +45,6 @@ public class HongEditorHelper {
             		multi.setActiveEditor(ste);
             		return ste;
             	}
-//            	System.out.printf("== StructuredTextEditor : %s \n", ste);
             	
 				IEditorPart[] editors = multi.findEditors(editorPart.getEditorInput());
 				for (IEditorPart editor : editors) {

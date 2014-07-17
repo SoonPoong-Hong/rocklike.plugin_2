@@ -18,10 +18,6 @@ import org.eclipse.ui.editors.text.TextSourceViewerConfiguration;
 import rocklike.plugin.mybatis.highlight.scanner.HongColorProvider;
 import rocklike.plugin.mybatis.highlight.scanner.HongSingleTokenScanner;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2014. 7. 5.
- */
 public class MybatisSourceViewerConfiguration extends TextSourceViewerConfiguration{
 
 	HongSqlScanner sqlScanner;

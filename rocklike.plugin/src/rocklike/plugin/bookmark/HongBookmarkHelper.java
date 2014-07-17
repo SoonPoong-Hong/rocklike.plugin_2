@@ -18,10 +18,6 @@ import org.eclipse.ui.texteditor.MarkerUtilities;
 
 import rocklike.plugin.util.HongEclipseUtil;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2013.
- */
 public class HongBookmarkHelper {
 
 	public static final String MARKER = "rocklike.plugin.bookmark" ;

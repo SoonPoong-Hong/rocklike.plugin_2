@@ -12,17 +12,15 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 
-/**
- * @author hong
- * @date 2014. 7. 5.
- */
 public class HongEclipseFileHelper {
- 
+	
+
 	public static IWorkspaceRoot getWorkspaceRoot(){
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
@@ -56,6 +54,20 @@ public class HongEclipseFileHelper {
 			}
 			f.create(true, true, null);
 		}
+	}
+	
+	
+	public static IFile getFileFromWorkspaceRoot(String pathFromWorkspace){
+		IWorkspaceRoot root = getWorkspaceRoot();
+		IPath p = Path.fromOSString(pathFromWorkspace);
+		return root.getFile(p);
+	}
+	
+	
+	public static IFolder getFolderFromWorkspaceRoot(String pathFromWorkspace){
+		IWorkspaceRoot root = getWorkspaceRoot();
+		IPath p = Path.fromOSString(pathFromWorkspace);
+		return root.getFolder(p);
 	}
 
 }

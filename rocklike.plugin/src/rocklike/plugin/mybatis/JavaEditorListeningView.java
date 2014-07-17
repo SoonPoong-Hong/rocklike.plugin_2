@@ -49,10 +49,6 @@ import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.HongMybatisHelper;
 import rocklike.plugin.util.HongMybatisHelper.IFileAndId;
 
-/**
- * @author Hong SoonPoong (rocklike@gmail.com)
- * @date 2014. 7. 5.
- */
 public class JavaEditorListeningView extends ViewPart {
 
 	Text t;
