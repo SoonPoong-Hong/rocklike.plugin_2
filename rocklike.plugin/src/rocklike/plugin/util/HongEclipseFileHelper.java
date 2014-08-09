@@ -2,6 +2,8 @@ package rocklike.plugin.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
@@ -13,10 +15,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.JavaModelException;
 
 public class HongEclipseFileHelper {
 	
@@ -70,4 +68,28 @@ public class HongEclipseFileHelper {
 		return root.getFolder(p);
 	}
 
+
+	public static IFile getFile(IProject proj, String path){
+		return proj.getFile(path);
+	}
+	
+	
+	public static void createFile(IFile f, String contents ) throws CoreException{
+		InputStream is = new ByteArrayInputStream(contents.getBytes(Charset.forName("UTF8")));
+		f.create(is, true, null);
+	}
+	
+	
+	public static void createFileIfNotExists(IFile f, String contents ) throws CoreException{
+		if(!f.exists()){
+			createFile(f, contents);
+		}
+	}
+	
+	
+	public static boolean exists(IProject proj, String path){
+		IFile f = proj.getFile(path);
+		return f.exists();
+	}
+	
 }

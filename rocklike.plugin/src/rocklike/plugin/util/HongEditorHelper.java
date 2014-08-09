@@ -88,6 +88,11 @@ public class HongEditorHelper {
 	}
 
 	
+	public static void openTextEditorAndSelect(IFile ifile){
+		openTextEditorAndSelect(ifile, 0, 0);
+	}
+	
+	
 	public static void openTextEditorAndSelect(IFile ifile, int offset, int length){
 		try {
 			ITextEditor ite = findTextEditor(IDE.openEditor(HongEclipseUtil.getActivePage(), ifile));
@@ -188,7 +193,6 @@ public class HongEditorHelper {
 			String attr = el.getAttribute("id");
 			if(refid!=null && refid.equals(attr)){
 				String contents = el.getSource();
-//				System.out.printf("== 찾음\n%s \n", contents);
 				return el;
 			}
 		}

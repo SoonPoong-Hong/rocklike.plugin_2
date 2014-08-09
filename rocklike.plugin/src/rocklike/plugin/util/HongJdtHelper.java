@@ -175,22 +175,14 @@ public class HongJdtHelper {
 		}
 		IType mtype = interfaceMethod.getDeclaringType();
 		try {
-			long start = System.currentTimeMillis();
-			long end = 0;
 			ITypeHierarchy th = mtype.newTypeHierarchy(interfaceMethod.getJavaProject(), null);
-			end = System.currentTimeMillis();
-			System.out.printf("== newTypeHierarchy (%s) \n", (end-start));
 			IType[] types = th.getSubtypes(mtype);
 			for(IType t : types){
 				MethodDeclaration md = resolveMethodInImpl(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
 				if(md!=null){
-					end = System.currentTimeMillis();
-					System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
 					return md;
 				}
 			}
-			end = System.currentTimeMillis();
-			System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
@@ -207,19 +199,13 @@ public class HongJdtHelper {
 			long start = System.currentTimeMillis();
 			long end = 0;
 			ITypeHierarchy th =   CacheSupportTypeHierarchyResolver.get().resolvedCachedTypeHierarchy(interfaceMethod.getJavaProject(), mtype);
-			end = System.currentTimeMillis();
-			System.out.printf("== newTypeHierarchy (%s) \n", (end-start));
 			IType[] types = th.getSubtypes(mtype);
 			for(IType t : types){
 				MethodDeclaration md = resolveMethodInImpl(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
 				if(md!=null){
-					end = System.currentTimeMillis();
-					System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
 					return md;
 				}
 			}
-			end = System.currentTimeMillis();
-			System.out.printf("== newTypeHierarchy 2 (%s) \n", (end-start));
 		} catch (JavaModelException e) {
 			e.printStackTrace();
 		}
@@ -289,8 +275,6 @@ public class HongJdtHelper {
 			}
 			IFolder f = root.getFolder(e.getPath());
 			candidates.add(f);
-//			System.out.println(e.getPath());
-//			System.out.printf("%s :: %s :: %s :: %s\n", e.getPath(), e.getEntryKind(), e.getEntryKind()==IClasspathEntry.CPE_SOURCE, f.exists() );
 		}
 		
 		if(candidates.size()==1){
@@ -438,45 +422,28 @@ public class HongJdtHelper {
 	//=========== 추가할 소스
 	
 	public static  MethodDeclaration resolveMethodDeclaration(MethodInvocation mi){
-//		System.out.printf("====  resolveMethodDeclaration 시작 \n");
-		long start = System.currentTimeMillis();
-		long end = 0;
 		if(mi!=null){
 			// 메소드 호출일때
 			// 먼저 impl에서 찾고
 			MethodDeclaration md ;
 			IMethod m = (IMethod) mi.resolveMethodBinding().getJavaElement();
 			md = resolveImplMethodOfDirect(m);
-			end = System.currentTimeMillis();
-//			System.out.printf("= 0 (%s) \n", (end-start));
-			
 			if(md!=null){
 				return md;
 			}
 			
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
-			end = System.currentTimeMillis();
-//			System.out.printf("= 1-1 (%s) \n", (end-start));
 			md = resolveMethodInImpl(cu, m );
-			end = System.currentTimeMillis();
-//			System.out.printf("= 1-2 (%s) \n", (end-start));
-			end = System.currentTimeMillis();
-//			System.out.printf("= 1-3 (%s) \n", (end-start));
 			if(md!=null){
 				return md;
 			}
 		}
-		
-//		System.out.printf("====  resolveMethodDeclaration 땡. \n");
 		return null;
 	}
 	
 	
 	public static  MethodDeclaration resolveMethodDeclarationCached(MethodInvocation mi){
-//		System.out.printf("====  resolveMethodDeclaration 시작 (%s)\n", mi.getName());
-		long start = System.currentTimeMillis();
-		long end = 0;
 		if(mi!=null){
 			// 메소드 호출일때
 			// 먼저 impl에서 찾고
@@ -489,8 +456,6 @@ public class HongJdtHelper {
 			}
 			
 			md = resolveImplMethodOfDirectOfCached(m);
-			end = System.currentTimeMillis();
-//			System.out.printf("= 0 (%s) \n", (end-start));
 			
 			if(md!=null){
 				CachedMethodDeclarationHolder.get().put(m, md);
@@ -499,20 +464,12 @@ public class HongJdtHelper {
 			
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = CacheSupportCompilationUnit.get().getCompilationUnit((IFile)m.getResource());
-			end = System.currentTimeMillis();
-//			System.out.printf("= 1-1 (%s) \n", (end-start));
 			md = resolveMethodInImpl(cu, m );
-			end = System.currentTimeMillis();
-//			System.out.printf("= 1-2 (%s) \n", (end-start));
-			end = System.currentTimeMillis();
-//			System.out.printf("= 1-3 (%s) \n", (end-start));
 			if(md!=null){
 				CachedMethodDeclarationHolder.get().put(m, md);
 				return md;
 			}
 		}
-		
-//		System.out.printf("====  resolveMethodDeclaration 땡. \n");
 		return null;
 	}
 

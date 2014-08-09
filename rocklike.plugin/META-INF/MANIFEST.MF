@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Hong (rock-like)
 Bundle-SymbolicName: rocklike.plugin; singleton:=true
-Bundle-Version: 1.7.1
+Bundle-Version: 1.8.7
 Bundle-Activator: rocklike.plugin.HongPluginActivator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -22,3 +22,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.wst.sse.ui
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: lib/freemarker.jar,
+ lib/guava-16.0.1.jar,
+ lib/guice-4.0.jar,
+ .

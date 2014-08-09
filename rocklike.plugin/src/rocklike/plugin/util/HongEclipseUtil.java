@@ -155,34 +155,21 @@ public class HongEclipseUtil {
 	
 	public static void openExplorer(File f){
 		if(f==null || !f.exists()){
-			System.out.printf("=== 해당 파일이 존재하지 않음. [%s] \n", f.getAbsolutePath());
+			HongMessagePopupUtil.showErrMsg("해당 파일이 존재하지 않음.\n"+ f.getAbsolutePath());
 			return;
 		}
 		
-		if(f.isDirectory()){
-			try {
-				openExplorer(f.getCanonicalPath());
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
-		}else if(f.isFile()){
-			File dir = f.getParentFile();
-			try {
-				openExplorer(dir.getCanonicalPath());
-			} catch (IOException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
-		}else{
-			System.out.printf("=== 해당 파일위치를 열수 없습니다. [%s] \n", f.getPath());
+		try {
+			openExplorer(f.getCanonicalPath());
+		} catch (IOException e) {
+			e.printStackTrace();
 			setStatusLineMsg("=== 해당 파일위치를 열수 없습니다.::" + f.getPath());
 		}
 		
 	}
 	
 	private static void openExplorer(String path){
-		ProcessBuilder pb = new ProcessBuilder("explorer", path);
+		ProcessBuilder pb = new ProcessBuilder("explorer", "/E,", "/select,",  path);
 		try {
 			pb.start();
 		} catch (IOException e) {
@@ -285,6 +272,31 @@ public class HongEclipseUtil {
 	}
 	
 	
+	public static IProject getSelectedProject(ISelection isel){
+		if(isel instanceof ITextSelection){
+			return getActiveEditorProject();
+		}else{
+			if(isel instanceof IStructuredSelection){
+				IStructuredSelection thisSel = (IStructuredSelection)isel;
+				if(thisSel instanceof IResource){
+					return ((IResource)thisSel).getProject();
+				}
+				if(!thisSel.isEmpty()){
+					Object firstElement = thisSel.getFirstElement();
+					IResource res = (IResource) Platform.getAdapterManager().getAdapter(firstElement, IResource.class);
+					if(res!=null){
+						return res.getProject();
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	
+	
 	public static IViewPart showView(String id){
 		try {
 	        return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(id);
@@ -293,14 +305,11 @@ public class HongEclipseUtil {
 	        return null;
         }
 	}
+
 	
-//	public static IViewPart getView(String id){
-//		try {
-//			return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().se
-//		} catch (PartInitException e) {
-//			e.printStackTrace();
-//			return null;
-//		}
-//		
-//	}
+	
+	public static void main(String[] args) throws IOException {
+	    ProcessBuilder pb = new ProcessBuilder("explorer", "/E,", "/select,", "D:\\tmp\\한글 막\\oracle-ds.xml");
+	    pb.start();
+    }
 }

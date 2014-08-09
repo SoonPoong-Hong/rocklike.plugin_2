@@ -458,6 +458,20 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <wizard
+            category="rocklike.plugin.wizards.category"
+            class="rocklike.plugin.srcgen.wizards.HongNewFileCreateWizard"
+            icon="icons/sample.gif"
+            id="rocklike.plugin.srgen.newFileCreateWizard"
+            name="파일 생성(controller,service,Dao등)">
+      </wizard>
+      <category
+            id="rocklike.plugin.wizards.category"
+            name="홍">
+      </category>
+   </extension>
    <!--
    <extension
          point="org.eclipse.ui.editors.markerUpdaters">
