@@ -244,4 +244,11 @@ public class HongEditorHelper {
 		System.out.printf("[%s] \n", str);
 		
 	}
+
+
+
+	public static void writeToNextLine(IDocument doc, int currLine, String msg) throws BadLocationException{
+		int nextLineOffset = doc.getLineOffset(currLine) + doc.getLineLength(currLine);
+		doc.replace(nextLineOffset, 0, msg + "\n");
+	}
 }

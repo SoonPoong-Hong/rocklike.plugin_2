@@ -52,8 +52,8 @@ public class HongJdtHelper {
 		}
 		return null;
 	}
-	
-	
+
+
 	public static ICompilationUnit getSelectedICompilationUnit(){
 		ISelection sel = HongEclipseUtil.getSelection();
 		if(sel instanceof ITextSelection){
@@ -70,11 +70,11 @@ public class HongJdtHelper {
 		}
 		return null;
 	}
-	
+
 	public static CompilationUnit getCompilationUnit(IFile f){
 		return getCompilationUnit( JavaCore.createCompilationUnitFrom(f) );
 	}
-	
+
 	public static CompilationUnit getCompilationUnit(ICompilationUnit icu){
 		ASTParser p = ASTParser.newParser(AST.JLS4);
 		p.setSource(icu);
@@ -83,8 +83,8 @@ public class HongJdtHelper {
 		p.setBindingsRecovery(true);
 		return (CompilationUnit)p.createAST(null);
 	}
-	
-	
+
+
 	public static MethodInvocation getSelectedElementOfMethodInvocation(){
 		ISelection sel = HongEclipseUtil.getSelection();
 		final ObjectHolder<MethodInvocation> oh = new ObjectHolder();
@@ -106,16 +106,16 @@ public class HongJdtHelper {
 		}
 		return oh.get();
 	}
-	
-	
-	
+
+
+
 
 	public static MethodInvocation resolveMethodInvocationByPosition(CompilationUnit cu, int pos){
 		MethodInvocationResolverByPosition v = new MethodInvocationResolverByPosition(cu, pos);
 		cu.accept(v);
 		return v.holder.get();
 	}
-	
+
 	public static MethodInvocation resolveMethodInvocationByPosition2(CompilationUnit cu,int pos){
 		 IJavaElement srcJavaElement = null;
         try {
@@ -131,9 +131,9 @@ public class HongJdtHelper {
 		}else if(srcJavaElement instanceof IType){
 			srcNode = cu.findDeclaringNode(((IType)srcJavaElement).getKey());
 		}
-		
+
 		MethodInvocationResolverByPosition v;
-		
+
 		if(srcNode!=null){
 			v = new MethodInvocationResolverByPosition(srcNode, pos);
 		}else{
@@ -165,10 +165,10 @@ public class HongJdtHelper {
 			return true;
 		}
 	}
-	
-	
 
-	
+
+
+
 	public static MethodDeclaration resolveImplMethodOfDirect(IMethod interfaceMethod){
 		if(interfaceMethod==null){
 			return null;
@@ -188,8 +188,8 @@ public class HongJdtHelper {
 		}
 		return null;
 	}
-	
-	
+
+
 	public static MethodDeclaration resolveImplMethodOfDirectOfCached(IMethod interfaceMethod){
 		if(interfaceMethod==null){
 			return null;
@@ -211,7 +211,7 @@ public class HongJdtHelper {
 		}
 		return null;
 	}
-	
+
 	public static MethodDeclaration resolveMethodInImpl(ASTNode implCu, IMethod searchMethod){
 		if(implCu==null || searchMethod==null){
 			return null;
@@ -220,7 +220,7 @@ public class HongJdtHelper {
 		implCu.accept(v);
 		return v.holder.get();
 	}
-	
+
 	public static MethodDeclaration resolveMethodInImpl(ASTNode implCu, IMethodBinding searchMethodBinding){
 		if(implCu==null || searchMethodBinding==null){
 			return null;
@@ -229,19 +229,19 @@ public class HongJdtHelper {
 		implCu.accept(v);
 		return v.holder.get();
 	}
-	
+
 	private static class MethodResolverByNameAndParameter extends ASTVisitor{
 		private ObjectHolder<MethodDeclaration> holder = new ObjectHolder();
 		private IMethod intfMethod;
 		private boolean finished = false;
 		private ASTNode cu;
-		
+
 		public MethodResolverByNameAndParameter(ASTNode cu, IMethod interfaceMethod) {
 			super();
 			this.intfMethod = interfaceMethod;
 			this.cu = cu;
 		}
-		
+
 		@Override
 		public boolean visit(MethodDeclaration node) {
 			if(finished){
@@ -249,8 +249,8 @@ public class HongJdtHelper {
 			}
 			// 메소드명이 똑같고, 파라미터 타입도 똑같을때
 			if(intfMethod.getElementName().equals(node.resolveBinding().getName())){
-				String[] intfParams = intfMethod.getParameterTypes(); 
-				String[] thisParams = ((IMethod)(node.resolveBinding().getJavaElement())).getParameterTypes(); 
+				String[] intfParams = intfMethod.getParameterTypes();
+				String[] thisParams = ((IMethod)(node.resolveBinding().getJavaElement())).getParameterTypes();
 				if(Arrays.equals(intfParams, thisParams)){
 					holder.put(node);
 					finished = true;
@@ -260,15 +260,15 @@ public class HongJdtHelper {
 			return super.visit(node);
 		}
 	}
-	
-	
+
+
 
 	public static IFolder assumeJavaSrcFolder(IJavaProject jp) throws JavaModelException {
 		IClasspathEntry[] cps = jp.getRawClasspath();
 		IWorkspaceRoot root = HongEclipseFileHelper.getWorkspaceRoot();
-		
+
 		List<IFolder> candidates = new ArrayList(2);
-		
+
 		for(IClasspathEntry e : cps){
 			if(e.getEntryKind()!=IClasspathEntry.CPE_SOURCE){
 				continue;
@@ -276,31 +276,31 @@ public class HongJdtHelper {
 			IFolder f = root.getFolder(e.getPath());
 			candidates.add(f);
 		}
-		
+
 		if(candidates.size()==1){
 			return candidates.get(0);
 		}
-		
+
 		// main/java 가 있으면 그게 우선.
 		for(IFolder f : candidates){
 			if(f.toString().indexOf("src/main/java")!=-1){
 				return f;
 			}
 		}
-		
+
 		// 그외는 젤 첫번째 걸로 그냥 씀
 		if(candidates.size()>0){
 			return candidates.get(0);
 		}
-		
+
 		return null;
 	}
-	
-	
-	
-	
 
-	
+
+
+
+
+
 	public static  MethodDeclaration getSelectedElementOfMethodDeclaration(){
 		ISelection sel = HongEclipseUtil.getSelection();
 		final ObjectHolder<MethodDeclaration> oh = new ObjectHolder();
@@ -322,8 +322,8 @@ public class HongJdtHelper {
 		}
 		return oh.get();
 	}
-	
-	
+
+
 	/**
 	 * 메소드 invocation이라면 그 invocation의 declaration을 쓰고, 아니면, 해당 메소드 declaration을 가져온다.
 	 * @return
@@ -339,14 +339,14 @@ public class HongJdtHelper {
 			if(md!=null){
 				return md;
 			}
-			
+
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
 			md = resolveMethodInImpl(cu, m );
 			if(md!=null){
 				return md;
 			}
-			
+
 		}else{
 			// 메소드 호출이 아니면, 그것을 둘러싸는 메소드 invocation을 리턴
 			MethodDeclaration md = getSelectedElementOfMethodDeclaration();
@@ -354,17 +354,17 @@ public class HongJdtHelper {
 				return md;
 			}
 		}
-		
+
 		return null;
 	}
-	
-	
+
+
 	public static MethodDeclaration getSelectedElementOfMethodInvocationRegardingInterface(){
 		MethodInvocation mi = getSelectedElementOfMethodInvocation();
 		if(mi==null){
 			return null;
 		}
-		
+
 		// 먼저 impl에서 찾고
 		MethodDeclaration md ;
 		IMethod m = (IMethod) mi.resolveMethodBinding().getJavaElement();
@@ -379,11 +379,11 @@ public class HongJdtHelper {
 		if(md!=null){
 			return md;
 		}
-		
+
 		return null;
 	}
-	
-	
+
+
 	public  MethodDeclaration getSelectedElementOfMethodDeclarationAdvanced() throws JavaModelException{
 		ISelection sel = HongEclipseUtil.getSelection();
 		final ObjectHolder<MethodDeclaration> oh = new ObjectHolder();
@@ -399,11 +399,11 @@ public class HongJdtHelper {
 			IMethod m = (IMethod)je;
 			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
 			MethodDeclaration md = (MethodDeclaration) cu.findDeclaringNode(m.getKey());
-			
+
 			if(md==null){
 				return null;
 			}
-			
+
 			md.accept(new ASTVisitor(){
 				@Override
 				public boolean visit(MethodDeclaration node) {
@@ -416,11 +416,21 @@ public class HongJdtHelper {
 		}
 		return oh.get();
 	}
-	
-	
-	
-	//=========== 추가할 소스
-	
+
+
+
+	public static MethodDeclaration resolveMethodDeclarationByPosition(CompilationUnit cu, int pos) throws JavaModelException{
+		ICompilationUnit icu = (ICompilationUnit) cu.getJavaElement();
+		IJavaElement je = icu.getElementAt(pos);
+		if(!(je instanceof IMethod)){
+			return null;
+		}
+		IMethod m = (IMethod)je;
+		return resolveMethodInImpl(cu, m );
+	}
+
+
+
 	public static  MethodDeclaration resolveMethodDeclaration(MethodInvocation mi){
 		if(mi!=null){
 			// 메소드 호출일때
@@ -431,7 +441,7 @@ public class HongJdtHelper {
 			if(md!=null){
 				return md;
 			}
-			
+
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
 			md = resolveMethodInImpl(cu, m );
@@ -441,27 +451,27 @@ public class HongJdtHelper {
 		}
 		return null;
 	}
-	
-	
+
+
 	public static  MethodDeclaration resolveMethodDeclarationCached(MethodInvocation mi){
 		if(mi!=null){
 			// 메소드 호출일때
 			// 먼저 impl에서 찾고
 			MethodDeclaration md ;
 			IMethod m = (IMethod) mi.resolveMethodBinding().getJavaElement();
-			
+
 			MethodDeclaration cachedMD = CachedMethodDeclarationHolder.get().get(m);
 			if(cachedMD!=null){
 				return cachedMD;
 			}
-			
+
 			md = resolveImplMethodOfDirectOfCached(m);
-			
+
 			if(md!=null){
 				CachedMethodDeclarationHolder.get().put(m, md);
 				return md;
 			}
-			
+
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = CacheSupportCompilationUnit.get().getCompilationUnit((IFile)m.getResource());
 			md = resolveMethodInImpl(cu, m );
@@ -473,9 +483,13 @@ public class HongJdtHelper {
 		return null;
 	}
 
-	
+
 	public static void openInJavaEditor(IJavaElement javaElement) throws PartInitException, JavaModelException{
 		JavaUI.openInEditor(javaElement);
 	}
-	
+
+
+	public static String getCallerObjectName(MethodInvocation mi){
+		return mi.getExpression().toString();
+	}
 }

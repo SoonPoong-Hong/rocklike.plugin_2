@@ -7,7 +7,7 @@
             <format property="TODAY" pattern="yyyy-MM-dd_HH-mm" />
         </tstamp>
         <echo> time : ${TODAY} </echo>
-        <zip destfile="D:\project\KT\backup\src\rocklike.plugin-src_backup-${TODAY}.zip_" >
+        <zip destfile="E:\project\KT\backup\src\rocklike.plugin-src_backup-${TODAY}.zip_" >
           	<fileset dir=".">
                 <include name=".settings/**"/>
           		<include name="**"/>

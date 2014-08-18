@@ -64,6 +64,11 @@
             id="rocklike.plugin.refresh.showRefreshFolderList"
             name="refresh할 폴더 목록 보여주기">
       </command>
+      <command
+            defaultHandler="rocklike.plugin.handlers.ReadColumnDescriptionHandler"
+            id="rocklike.plugin.command.ReadColumnDescriptionHandler"
+            name="Column의 description 정보를 읽어오기">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -335,6 +340,11 @@
                   label="refresh할 폴더 목록 보여주기"
                   style="push">
             </command>
+            <command
+                  commandId="rocklike.plugin.command.ReadColumnDescriptionHandler"
+                  label="Column의 description 정보를 읽어오기"
+                  style="push">
+            </command>
          </menu>
       </menuContribution>
       <menuContribution
@@ -471,6 +481,13 @@
             id="rocklike.plugin.wizards.category"
             name="홍">
       </category>
+   </extension>
+   <extension
+         point="org.eclipse.jdt.ui.quickAssistProcessors">
+      <quickAssistProcessor
+            class="rocklike.plugin.jdt.quickassist.HongQuickAssistProcessor"
+            id="rocklike.plugin.HongQuickAssistProcessor">
+      </quickAssistProcessor>
    </extension>
    <!--
    <extension

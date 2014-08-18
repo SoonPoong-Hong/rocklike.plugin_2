@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Hong (rock-like)
 Bundle-SymbolicName: rocklike.plugin; singleton:=true
-Bundle-Version: 1.8.7
+Bundle-Version: 1.9.4
 Bundle-Activator: rocklike.plugin.HongPluginActivator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

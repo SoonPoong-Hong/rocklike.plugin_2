@@ -37,9 +37,9 @@ public class HongEclipseUtil {
     			}
     		}
     		return null;
-    		
+
     	}else{
-    		final ObjectHolder holder = new ObjectHolder();
+    		final ObjectHolder<IEditorPart> holder = new ObjectHolder<IEditorPart>();
     		Display.getDefault().syncExec(new Runnable(){
 				@Override
 				public void run() {
@@ -52,7 +52,7 @@ public class HongEclipseUtil {
 		    		}
 				}
     		});
-    		return (IEditorPart)holder.get();
+    		return holder.get();
     	}
     }
 
@@ -64,7 +64,7 @@ public class HongEclipseUtil {
     			return page;
     		}
     		return null;
-    		
+
     	}else{
     		final ObjectHolder<IWorkbenchPage> holder = new ObjectHolder();
     		Display.getDefault().syncExec(new Runnable(){
@@ -101,7 +101,7 @@ public class HongEclipseUtil {
 			ISelectionService service = getSelectionService();
 			ISelection sel = service.getSelection();
 			return sel;
-			
+
 		}else{
 			final ObjectHolder<ISelection> holder = new ObjectHolder();
 			Display.getDefault().syncExec(new Runnable(){
@@ -116,7 +116,7 @@ public class HongEclipseUtil {
 		}
 	}
 
-	
+
 	public static ITextSelection getTextSelection(){
 		ISelection sel = getSelection();
 		if(sel instanceof ITextSelection){
@@ -124,8 +124,8 @@ public class HongEclipseUtil {
 		}
 		return null;
 	}
-	
-	
+
+
 	public static ISelectionService getSelectionService(){
 		return getActiveWorkbenchWindow().getSelectionService();
 	}
@@ -138,7 +138,7 @@ public class HongEclipseUtil {
 				return;
 			}
 			part.getEditorSite().getActionBars().getStatusLineManager().setMessage(msg);
-			
+
 		}else{
 			Display.getDefault().asyncExec(new Runnable(){
 				@Override
@@ -152,22 +152,22 @@ public class HongEclipseUtil {
 			});
 		}
 	}
-	
+
 	public static void openExplorer(File f){
 		if(f==null || !f.exists()){
 			HongMessagePopupUtil.showErrMsg("해당 파일이 존재하지 않음.\n"+ f.getAbsolutePath());
 			return;
 		}
-		
+
 		try {
 			openExplorer(f.getCanonicalPath());
 		} catch (IOException e) {
 			e.printStackTrace();
 			setStatusLineMsg("=== 해당 파일위치를 열수 없습니다.::" + f.getPath());
 		}
-		
+
 	}
-	
+
 	private static void openExplorer(String path){
 		ProcessBuilder pb = new ProcessBuilder("explorer", "/E,", "/select,",  path);
 		try {
@@ -177,16 +177,16 @@ public class HongEclipseUtil {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public static void openExplorer(){
 		File f = getSelectedFile();
 		if(f!=null){
 			openExplorer(f);
 		}else{
-			setStatusLineMsg("[에러] 해당 파일위치를 열수 없습니다.");	
+			setStatusLineMsg("[에러] 해당 파일위치를 열수 없습니다.");
 		}
 	}
-	
+
 	public static void copyFilePathToClipboard(){
 		File f = getSelectedFile();
 		if(f!=null){
@@ -201,17 +201,17 @@ public class HongEclipseUtil {
 				setStatusLineMsg("[에러] 파일 경로를 copy하지 못했습니다." + e.getMessage());
 			}
 		}else{
-			setStatusLineMsg("[에러] 파일 경로를 copy하지 못했습니다.");			
+			setStatusLineMsg("[에러] 파일 경로를 copy하지 못했습니다.");
 		}
 	}
-	
+
 	private static File getSelectedFile(){
 		ISelection sel =  HongEclipseUtil.getSelection();
-		
+
 		if(sel instanceof IStructuredSelection){
 			IStructuredSelection strucSel = (IStructuredSelection)sel;
 			Object selObj = strucSel.getFirstElement();
-			
+
 			Object obj = Platform.getAdapterManager().getAdapter(selObj, IResource.class);
 			if(obj!=null){
 				IResource res = (IResource)obj;
@@ -219,11 +219,11 @@ public class HongEclipseUtil {
 				return f;
 			}
 		}
-		
+
 		return null;
 	}
-	
-	
+
+
 	public static boolean isUiThread(){
 		return Display.getDefault().getThread()==Thread.currentThread();
 	}
@@ -233,18 +233,18 @@ public class HongEclipseUtil {
 		System.out.printf("==== IFile [%s] \n", file.getLocation().toString());
 		return file;
 	}
-	
-	
+
+
 	public static <T> T getFromActiveEditor(Class clz){
 		T t = (T)HongEclipseUtil.getActiveEditor().getEditorInput().getAdapter(clz);
 		return t;
 	}
-	
-	
+
+
 	public static IServiceLocator getIServiceLocator(){
 		return PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 	}
-	
+
 	public static ISelectionService getISelectionService(){
 		return (ISelectionService)getIServiceLocator().getService(ISelectionService.class);
 	}
@@ -253,7 +253,7 @@ public class HongEclipseUtil {
 		IProject p = getActiveEditorFile().getProject();
 		return p;
 	}
-	
+
 	public static IProject getSelectedProject(){
 		ISelection isel = getSelection();
 		if(isel instanceof ITextSelection){
@@ -270,8 +270,8 @@ public class HongEclipseUtil {
 		}
 		return null;
 	}
-	
-	
+
+
 	public static IProject getSelectedProject(ISelection isel){
 		if(isel instanceof ITextSelection){
 			return getActiveEditorProject();
@@ -292,11 +292,11 @@ public class HongEclipseUtil {
 		}
 		return null;
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	public static IViewPart showView(String id){
 		try {
 	        return PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView(id);
@@ -306,8 +306,8 @@ public class HongEclipseUtil {
         }
 	}
 
-	
-	
+
+
 	public static void main(String[] args) throws IOException {
 	    ProcessBuilder pb = new ProcessBuilder("explorer", "/E,", "/select,", "D:\\tmp\\한글 막\\oracle-ds.xml");
 	    pb.start();
