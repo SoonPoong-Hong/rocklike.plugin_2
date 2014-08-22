@@ -52,7 +52,7 @@ public class MybatisXmlGotoHandler extends AbstractHandler {
 				}
 				
 				CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
-				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, mi.resolveMethodBinding());
+				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInThisClass(implCu, mi.resolveMethodBinding());
 				if(implMethod!=null){
 					HongMybatisHelper.openMybatisXmlFile(proj, implMethod);
 				}

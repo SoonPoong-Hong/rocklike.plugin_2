@@ -1,19 +1,12 @@
 package rocklike.plugin.util;
 
-import java.util.Arrays;
-
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IField;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -23,8 +16,10 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 
+import rocklike.plugin.jdt.kt.KtCorecmsResolver;
+
 public class HongMybatisHelper {
-	
+
 
 	public static String extractSelectedValidText()  {
 		// 해당 줄의 유효한 range text를 추출 (not whitespace & not 따옴표)
@@ -33,25 +28,25 @@ public class HongMybatisHelper {
 			ITextSelection ts = (ITextSelection)sel;
 			int line = ts.getStartLine();
 			int offset = ts.getOffset();
-			
+
 			IDocument doc = HongEditorHelper.getIDocument();
 			String str = extractValidRangeText(doc, offset);
 			return str;
 		}
 		return null;
 	}
-	
-	
+
+
 	public static String extractValidRangeText(IDocument doc, int offset)  {
 		try {
 			int lineNum = doc.getLineOfOffset(offset);
 			String line = doc.get(doc.getLineOffset(lineNum), doc.getLineLength(lineNum));
 			int thisOffset = offset - doc.getLineOffset(lineNum);
-			
+
 			// whitespace 또는 따옴표인 경우에 구분
 			int start = 0 ;
 			char[] arr = line.toCharArray();
-			
+
 			for(int i=thisOffset; i>=0; i--){
 				char c = arr[i];
 				if(Character.isWhitespace(c) || c=='\'' || c=='\"'){
@@ -59,7 +54,7 @@ public class HongMybatisHelper {
 					break;
 				}
 			}
-			
+
 			int end = line.length();
 			for(int i=thisOffset; i<end; i++){
 				char c = arr[i];
@@ -67,7 +62,7 @@ public class HongMybatisHelper {
 					end = i;
 				}
 			}
-			
+
 			System.out.printf("%s , %s \n", start, end);
 			return line.substring(start, end);
 		} catch (BadLocationException e) {
@@ -75,17 +70,17 @@ public class HongMybatisHelper {
 			return null;
 		}
 	}
-	
-	
+
+
 	public static IFile assumeMybatisQueryXmlFilePath(IProject p , String inputParam){
 		// com.kt.cms.cuc.dst.dm.dao.DmDao3.selectDeployedCountFromCompletedTable
 		//    => src/main/resource/sqlmap/sql/dst/dm/Dm3.xml
-		
+
 //		IProject p = HongEclipseUtil.getSelectedProject();
 //		System.out.printf("== IProject : %s \n", p);
-		
+
 		String path = "src/main/resource/sqlmap/sql/";
-		
+
 		int pos;
 		pos = inputParam.lastIndexOf(".");
 		if(pos!=-1){
@@ -98,8 +93,8 @@ public class HongMybatisHelper {
 //		System.out.println(path + inputParam);
 		return p.getFile(path+inputParam);
 	}
-	
-	
+
+
 	public static String assumeMybatisQueryXmlId(String s){
 		int pos = s.lastIndexOf(".");
 		if(pos!=-1){
@@ -108,48 +103,19 @@ public class HongMybatisHelper {
 			return s;
 		}
 	}
-	
-	
-//	/**
-//	 * @deprecated 이건 삭제할 것임.
-//	 */
-//	public static class MethodDeclarationResolverByName extends ASTVisitor{
-//		private ObjectHolder<MethodDeclaration> holder = new ObjectHolder();
-//		private String methodName;
-//		private boolean finished = false;
-//		private CompilationUnit cu;
-//		
-//		public MethodDeclarationResolverByName(CompilationUnit cu, String methodName) {
-//			super();
-//			this.methodName = methodName;
-//			this.cu = cu;
-//		}
-//		
-//		public static MethodDeclaration resolve(CompilationUnit cu, String methodName){
-//			MethodDeclarationResolverByName v = new MethodDeclarationResolverByName(cu, methodName);
-//			cu.accept(v);
-//			return v.holder.get();
-//		}
-//
-//		@Override
-//		public boolean visit(MethodDeclaration node) {
-//			if(finished){
-//				return false;
-//			}
-//			String thisName = node.getName().toString();
-//			if(methodName.equals(thisName)){
-//				holder.put(node);
-//				finished = true;
-//				return false;
-//			}
-//			return super.visit(node);
-//		}
-//
-//		
-//	}
-	
 
-	
+
+	public static String assumeMybatisQueryXmlPackageId(IType t){
+		String pkgName = t.getPackageFragment().getElementName();
+		String clzName = t.getElementName();
+		//    com.kt.cms.cuc.acq.ca.dao.impl.AcquireRequestDaoImpl
+		// => com.kt.cms.cuc.acq.ca.dao.AcquireRequestDao.selectAcquireRequestInfo
+		String result = pkgName.substring(0, pkgName.length()-5);
+		result = result + "." + clzName.replace("Impl","");
+		return result;
+	}
+
+
 	public static IFileAndId extractMybatisXmlFileAndId(IProject proj, MethodDeclaration md){
 		if(md==null){
 			return null;
@@ -158,20 +124,20 @@ public class HongMybatisHelper {
 		md.accept(v);
 		return new IFileAndId(v.resultFile, v.resultId, v.inputParam);
 	}
-	
+
 	private static class ExtractMybatisXmlFileAndId extends ASTVisitor{
 		private IProject proj;
 		private MethodDeclaration md;
 		private IFile resultFile;
 		private String resultId;
 		private String inputParam;
-		
+
 		private ExtractMybatisXmlFileAndId(IProject proj, MethodDeclaration md) {
 			super();
 			this.proj = proj;
 			this.md = md;
 		}
-		
+
 		@Override
 		public boolean visit(MethodInvocation node) {
 			if(resultFile!=null){
@@ -184,7 +150,7 @@ public class HongMybatisHelper {
 				String param = sl.getLiteralValue();
 				inputParam = param;
 //				System.out.printf("== mybatis : [%s] [%s]\n", node.arguments().get(0), param);
-				
+
 				IFile xmlFile = assumeMybatisQueryXmlFilePath(proj, param);
 				if(xmlFile.exists()){
 					resultFile = xmlFile;
@@ -196,7 +162,7 @@ public class HongMybatisHelper {
 			return true;
 		}
 	}
-	
+
 	public static class IFileAndId{
 		public IFileAndId(IFile ifile, String id, String inputParam) {
 			super();
@@ -208,9 +174,9 @@ public class HongMybatisHelper {
 		public String id;
 		public String inputParam;
 	}
-	
-	
-	
+
+
+
 	public static void openMybatisXmlFile(IProject proj, String inputParam){
 		IFile xmlFile = assumeMybatisQueryXmlFilePath(proj, inputParam);
 		if(xmlFile.exists()){
@@ -222,9 +188,9 @@ public class HongMybatisHelper {
 			}
 		}
 	}
-	
-	
-	
+
+
+
 	public static void openMybatisXmlFile(IProject proj, MethodDeclaration md){
 		if(md==null){
 			return;
@@ -239,20 +205,17 @@ public class HongMybatisHelper {
 			e.printStackTrace();
 		}
 	}
-	
 
 
-	
-	
-	
+
 	public static IFile assumeDaoImplPath(IProject proj, IFile f){
 		IPath p = f.getProjectRelativePath();
 		String path = p.toString();
 		int lastPos = path.lastIndexOf("/");
 		IFile tmpFile;
-		
+
 		String tmpPath;
-		
+
 		tmpPath = path;
 		tmpPath = tmpPath.substring(0, lastPos) + "/impl" + tmpPath.substring(lastPos);
 		tmpPath = tmpPath.replaceFirst("\\.java", "Impl.java");
@@ -260,7 +223,7 @@ public class HongMybatisHelper {
 		if(tmpFile.exists()){
 			return tmpFile;
 		}
-		
+
 		// 추가 예외처리
 		//    MetaDeployViewDao2
 		// => MetaDeployViewDaoImpl2
@@ -270,10 +233,30 @@ public class HongMybatisHelper {
 		if(tmpFile.exists()){
 			return tmpFile;
 		}
-		
+
 		return null;
 	}
-	
+
+
+
+
+	public static boolean isDaoImplClass() throws JavaModelException{
+		ICompilationUnit icu = HongJdtHelper.getSelectedICompilationUnit();
+		IType type = icu.getTypes()[0];
+		if(!KtCorecmsResolver.isBelongsToCorecmsClass(type)){
+			return false;
+		}
+
+		String packageName = type.getPackageFragment().getElementName();
+		if(packageName.endsWith(".dao.impl")){
+			return true;
+		}else{
+			return false;
+		}
+	}
+
+
+
 	public static void main(String[] args) {
 		String path = "src/main/resource/sqlmap/sql/";
 		String s = "com.kt.cms.cuc.dst.dm.dao.DmDao3.selectTargetAid";

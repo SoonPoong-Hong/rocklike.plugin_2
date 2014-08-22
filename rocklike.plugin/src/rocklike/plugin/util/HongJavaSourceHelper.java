@@ -8,20 +8,43 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 public class HongJavaSourceHelper {
-	public void addImport(ICompilationUnit icu, String importStr) throws JavaModelException{
-		icu.createImport(importStr, null, null);
+
+	public static void addImport(ICompilationUnit icu, String fullClzName) throws JavaModelException{
+		icu.createImport(fullClzName, null, null);
 	}
 
 
-	public String addFieldIfNotExists(IType type, final String clzName, String fieldName, String contents) throws JavaModelException{
+	public static void addImportIfNotExists(ICompilationUnit icu, final String fullClzName) throws JavaModelException{
+		CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
+		final ObjectHolder<String> holder = new ObjectHolder();
+		cu.accept(new ASTVisitor(){
+			@Override
+            public boolean visit(ImportDeclaration node) {
+				String name = node.resolveBinding().getJavaElement().getElementName();
+				if(name.equals(fullClzName)){
+					holder.put("Y");
+					return false;
+				}
+				return true;
+            }
+		});
+
+		if(holder.get()==null){
+			icu.createImport(fullClzName, null, null);
+		}
+	}
+
+
+	public static String addFieldIfNotExists(IType type, final String clzName, String fieldName, String contents) throws JavaModelException{
 		if(clzName==null){
 			return null;
 		}
 		ICompilationUnit icu = type.getCompilationUnit();
-		
+
 		final ObjectHolder<String> holderExistingName = new ObjectHolder();
 		CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
 		cu.accept(new ASTVisitor() {
@@ -43,19 +66,19 @@ public class HongJavaSourceHelper {
 				return true;
 			}
 		});
-		
+
 		if(holderExistingName.get()!=null){
 			fieldName = holderExistingName.get();
 		}
-		
-	
+
+
 		type.createField(contents, null, true, null);
-		
+
 		return fieldName;
 	}
 
-	
-	public boolean hasSameMethodName(IType type, String methodName) throws JavaModelException{
+
+	public static boolean hasSameMethodName(IType type, String methodName) throws JavaModelException{
 		IMethod[] methods = type.getMethods();
 		for(IMethod m : methods){
 			if(methodName.equals(m.getElementName())){
@@ -64,9 +87,9 @@ public class HongJavaSourceHelper {
 		}
 		return false;
 	}
-	
-	
-	public void addMethod(IType type, String contents) throws JavaModelException{
+
+
+	public static void addMethod(IType type, String contents) throws JavaModelException{
 		type.createMethod(contents, null, true, null);
 	}
 }

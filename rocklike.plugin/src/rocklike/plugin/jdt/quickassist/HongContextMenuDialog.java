@@ -68,9 +68,6 @@ public class HongContextMenuDialog extends Dialog {
 		b.setText(name);
 		b.setData(workType);
 		radioButtons.add(b);
-
-
-
 	}
 
 	@Override

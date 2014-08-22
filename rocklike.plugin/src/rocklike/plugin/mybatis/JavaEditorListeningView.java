@@ -226,14 +226,14 @@ public class JavaEditorListeningView extends ViewPart {
 			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
 			if(!type.isInterface()){
 				CompilationUnit implCu = cu;
-				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, m);
+				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInThisClass(implCu, m);
 				final IFileAndId ifileAndId = HongMybatisHelper.extractMybatisXmlFileAndId(icu.getResource().getProject(), implMethod);
 //				System.out.printf("== (impl) %s , %s , %s \n", ifileAndId.id , ifileAndId.inputParam , ifileAndId.ifile);
 				exeIFileAndId(ifileAndId);
 			}else{
 				IFile implFile = HongMybatisHelper.assumeDaoImplPath(icu.getResource().getProject(), (IFile) icu.getResource().getAdapter(IFile.class));
 				CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
-				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, m);
+				MethodDeclaration implMethod = HongJdtHelper.resolveMethodInThisClass(implCu, m);
 				final IFileAndId ifileAndId = HongMybatisHelper.extractMybatisXmlFileAndId(implFile.getProject(), implMethod);
 //				System.out.printf("== (interface) %s , %s , %s \n", ifileAndId.id , ifileAndId.inputParam , ifileAndId.ifile);
 				exeIFileAndId(ifileAndId);
@@ -267,7 +267,7 @@ public class JavaEditorListeningView extends ViewPart {
 						return;
 					}
 					CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
-					MethodDeclaration implMethod = HongJdtHelper.resolveMethodInImpl(implCu, mb);
+					MethodDeclaration implMethod = HongJdtHelper.resolveMethodInThisClass(implCu, mb);
 					final IFileAndId ifileAndId = HongMybatisHelper.extractMybatisXmlFileAndId(implFile.getProject(), implMethod);
 					
 					exeIFileAndId(ifileAndId);

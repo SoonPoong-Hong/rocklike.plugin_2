@@ -69,6 +69,10 @@
             id="rocklike.plugin.command.ReadColumnDescriptionHandler"
             name="Column의 description 정보를 읽어오기">
       </command>
+      <command
+            id="rocklike.plugin.forTestCommand"
+            name="테스트용도 입니다.">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -91,6 +95,10 @@
       <handler
             class="rocklike.plugin.jdt.MethodCallShowHandler"
             commandId="rocklike.plugin.methodCall.viewer.show">
+      </handler>
+      <handler
+            class="rocklike.plugin.test.TestHandler"
+            commandId="rocklike.plugin.forTestCommand">
       </handler>
    </extension>
    <extension
@@ -312,6 +320,18 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+M3+H">
       </key>
+      <key
+            commandId="rocklike.plugin.refresh_resource.command"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+M3+R">
+      </key>
+      <key
+            commandId="rocklike.plugin.forTestCommand"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+M3+0">
+      </key>
       <!--
       <key
             commandId="rocklike.plugin.commands.sampleCommand"
@@ -343,6 +363,11 @@
             <command
                   commandId="rocklike.plugin.command.ReadColumnDescriptionHandler"
                   label="Column의 description 정보를 읽어오기"
+                  style="push">
+            </command>
+            <command
+                  commandId="rocklike.plugin.refresh_resource.command"
+                  label="지정한 폴더 refresh하기"
                   style="push">
             </command>
          </menu>

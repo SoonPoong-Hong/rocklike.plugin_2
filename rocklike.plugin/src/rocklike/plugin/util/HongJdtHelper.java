@@ -30,11 +30,18 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.search.SearchEngine;
+import org.eclipse.jdt.ui.IJavaElementSearchConstants;
 import org.eclipse.jdt.ui.JavaUI;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.dialogs.SelectionDialog;
 import org.eclipse.ui.ide.ResourceUtil;
 
 import rocklike.plugin.jdt.CacheSupportCompilationUnit;
@@ -178,7 +185,7 @@ public class HongJdtHelper {
 			ITypeHierarchy th = mtype.newTypeHierarchy(interfaceMethod.getJavaProject(), null);
 			IType[] types = th.getSubtypes(mtype);
 			for(IType t : types){
-				MethodDeclaration md = resolveMethodInImpl(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
+				MethodDeclaration md = resolveMethodInThisClass(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
 				if(md!=null){
 					return md;
 				}
@@ -201,7 +208,7 @@ public class HongJdtHelper {
 			ITypeHierarchy th =   CacheSupportTypeHierarchyResolver.get().resolvedCachedTypeHierarchy(interfaceMethod.getJavaProject(), mtype);
 			IType[] types = th.getSubtypes(mtype);
 			for(IType t : types){
-				MethodDeclaration md = resolveMethodInImpl(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
+				MethodDeclaration md = resolveMethodInThisClass(HongJdtHelper.getCompilationUnit(t.getCompilationUnit()), interfaceMethod);
 				if(md!=null){
 					return md;
 				}
@@ -212,7 +219,7 @@ public class HongJdtHelper {
 		return null;
 	}
 
-	public static MethodDeclaration resolveMethodInImpl(ASTNode implCu, IMethod searchMethod){
+	public static MethodDeclaration resolveMethodInThisClass(ASTNode implCu, IMethod searchMethod){
 		if(implCu==null || searchMethod==null){
 			return null;
 		}
@@ -221,7 +228,7 @@ public class HongJdtHelper {
 		return v.holder.get();
 	}
 
-	public static MethodDeclaration resolveMethodInImpl(ASTNode implCu, IMethodBinding searchMethodBinding){
+	public static MethodDeclaration resolveMethodInThisClass(ASTNode implCu, IMethodBinding searchMethodBinding){
 		if(implCu==null || searchMethodBinding==null){
 			return null;
 		}
@@ -342,7 +349,7 @@ public class HongJdtHelper {
 
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
-			md = resolveMethodInImpl(cu, m );
+			md = resolveMethodInThisClass(cu, m );
 			if(md!=null){
 				return md;
 			}
@@ -375,7 +382,7 @@ public class HongJdtHelper {
 
 		// impl에 없으면 자신에게서 찾기
 		CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
-		md = resolveMethodInImpl(cu, m );
+		md = resolveMethodInThisClass(cu, m );
 		if(md!=null){
 			return md;
 		}
@@ -426,7 +433,7 @@ public class HongJdtHelper {
 			return null;
 		}
 		IMethod m = (IMethod)je;
-		return resolveMethodInImpl(cu, m );
+		return resolveMethodInThisClass(cu, m );
 	}
 
 
@@ -444,7 +451,7 @@ public class HongJdtHelper {
 
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = getCompilationUnit((IFile)m.getResource());
-			md = resolveMethodInImpl(cu, m );
+			md = resolveMethodInThisClass(cu, m );
 			if(md!=null){
 				return md;
 			}
@@ -474,7 +481,7 @@ public class HongJdtHelper {
 
 			// impl에 없으면 자신에게서 찾기
 			CompilationUnit cu = CacheSupportCompilationUnit.get().getCompilationUnit((IFile)m.getResource());
-			md = resolveMethodInImpl(cu, m );
+			md = resolveMethodInThisClass(cu, m );
 			if(md!=null){
 				CachedMethodDeclarationHolder.get().put(m, md);
 				return md;
@@ -492,4 +499,30 @@ public class HongJdtHelper {
 	public static String getCallerObjectName(MethodInvocation mi){
 		return mi.getExpression().toString();
 	}
+
+
+	public static IType resolveSelectedType() throws JavaModelException{
+		ITextSelection textSelection = HongEclipseUtil.getTextSelection();
+		int pos = textSelection.getOffset();
+		ICompilationUnit icu = getSelectedICompilationUnit();
+		IJavaElement je = icu.getElementAt(pos);
+		if(je instanceof IType){
+			return (IType)je;
+		}
+		if(je!=null){
+			je = je.getParent();
+		}
+		if(je instanceof IType){
+			return (IType)je;
+		}
+		return null;
+	}
+
+
+	public static IType[] getInterfaces(IType t) throws JavaModelException{
+		ITypeHierarchy typeHierarchy = t.newTypeHierarchy(null);
+		IType[] allInterfaces = typeHierarchy.getAllInterfaces();
+		return allInterfaces;
+	}
+
 }
