@@ -217,55 +217,6 @@ public class HongEditorHelper {
 
 
 
-	public static void saveXml(IDOMModel domModel) throws UnsupportedEncodingException, IOException, CoreException{
-		domModel.save();
-	}
-
-
-
-	public static IDOMModel appendToLastInMybatisXml(IFile xmlFile, String tag, String id, String parameterType
-			, String resultType, String content) throws IOException, CoreException{
-
-		IStructuredModel sm = StructuredModelManager.getModelManager().getModelForRead(xmlFile);
-		if(sm instanceof IDOMModel){
-			IDOMModel domModel = (IDOMModel)sm;
-			IDOMDocument domDocument = domModel.getDocument();
-
-			NodeList nodeList = domDocument.getElementsByTagName("mapper");
-			Node mapperNode = nodeList.item(0);
-
-			Text textNode = domDocument.createTextNode("\n\n");
-			mapperNode.appendChild(textNode);
-
-			XmlElementBuilder builder = new XmlElementBuilder(domDocument, tag);
-
-			if(id!=null){
-				builder.addAttr("id", id);
-			}
-			if(parameterType!=null){
-				builder.addAttr("parameterType", parameterType);
-			}
-			if(resultType!=null){
-				builder.addAttr("resultType", resultType);
-			}
-			if("select".equals(tag)){
-				builder.addAttr("useCache", "false");
-			}
-			if(content!=null){
-				builder.setContent(content);
-			}
-
-			ElementImpl elem = builder.build();
-
-			mapperNode.appendChild(elem);
-			mapperNode.appendChild(domDocument.createTextNode("\n"));
-
-			return domModel;
-		}
-		return null;
-	}
-
-
 //	public static void main(String[] args) {
 //		char ch;
 //		ch = '.';

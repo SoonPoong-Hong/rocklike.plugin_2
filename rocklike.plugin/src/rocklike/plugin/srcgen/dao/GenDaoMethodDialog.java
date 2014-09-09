@@ -1,8 +1,12 @@
 package rocklike.plugin.srcgen.dao;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogSettings;
@@ -19,10 +23,14 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 
 import rocklike.plugin.util.HongDialogSettings;
+import rocklike.plugin.util.HongEditorHelper;
 import rocklike.plugin.util.HongEventHelper;
 import rocklike.plugin.util.HongJavaUIHelper;
+import rocklike.plugin.util.HongMessagePopupUtil;
+import rocklike.plugin.util.HongMybatisHelper;
 
 public class GenDaoMethodDialog extends Dialog{
 	public GenDaoMethodDialog(IType type) {
@@ -67,6 +75,8 @@ public class GenDaoMethodDialog extends Dialog{
 
 	    createRadioButtonOfSelectOneOrList(group, "selectOne");
 	    createRadioButtonOfSelectOneOrList(group, "selectList");
+
+	    oneListOptions.get(0).setSelection(true);
 
 	    new Label(container, SWT.NULL).setText("메소드명");
 	    methodNameText = new Text(container, SWT.BORDER);
@@ -131,8 +141,42 @@ public class GenDaoMethodDialog extends Dialog{
 		HongEventHelper.addEventOfSelectAllWhenGetFocused(parameterTypeText);
 		HongEventHelper.addEventOfSelectAllWhenGetFocused(resultTypeText);
 
+
+		for(Button thisB : crudOptions){
+			thisB.addSelectionListener(new SelectionAdapter() {
+				@Override
+                public void widgetSelected(SelectionEvent e) {
+					updateButtonEnableStatus();
+                }
+			});
+		}
+
+		for(Button thisB : oneListOptions){
+			thisB.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					updateButtonEnableStatus();
+				}
+			});
+		}
+
 	}
 
+
+	void updateButtonEnableStatus(){
+		if(crudOptions.get(1).getSelection()){
+			for(Button b : oneListOptions){
+				b.setEnabled(false);
+				resultTypeText.setEnabled(false);
+			}
+		}else{
+			for(Button b : oneListOptions){
+				b.setEnabled(true);
+			}
+			resultTypeText.setEnabled(true);
+		}
+
+	}
 
 
 	@Override
@@ -174,10 +218,58 @@ public class GenDaoMethodDialog extends Dialog{
 			genDaoMethodRequest.oneListOption = GenDaoMethodRequest.OneListOption.list;
 		}
 
+		if(!canOkProcess(genDaoMethodRequest)){
+			return ;
+		}
+
+		DaoMethodCreator.addMethodInDaoImpl(genDaoMethodRequest);
 		DaoMethodCreator.addMethodInDao(genDaoMethodRequest);
+		processMybatisXml(genDaoMethodRequest);
 
 	    super.okPressed();
     }
+
+
+
+
+	boolean canOkProcess(GenDaoMethodRequest r){
+		if(isBlank(r.methodName)){
+			HongMessagePopupUtil.showErrMsg("메소드명 비었음.");
+			methodNameText.setFocus();
+			return false;
+
+		}else if(isBlank(r.parameterType)){
+			HongMessagePopupUtil.showErrMsg("parameterType 비었음.");
+			parameterTypeText.setFocus();
+			return false;
+
+		}else if(r.selectUpdateOption==GenDaoMethodRequest.SelectUpdateOption.select && isBlank(r.resultType)){
+			HongMessagePopupUtil.showErrMsg("resultType 비었음.");
+			resultTypeText.setFocus();
+			return false;
+
+		}
+
+		return true;
+	}
+
+
+	boolean isBlank(String str){
+		return str==null || str.trim().length()==0;
+	}
+
+	void processMybatisXml(GenDaoMethodRequest request){
+		String xmlId = HongMybatisHelper.assumeMybatisQueryXmlPackageId(request.type)+"." + request.methodName ;
+		IFile xmlFile = HongMybatisHelper.assumeMybatisQueryXmlFilePath(request.type.getJavaProject().getProject(), xmlId);
+		try {
+	        IDOMModel domModel = HongMybatisHelper.appendToLastInMybatisXml(xmlFile, request.selectUpdateOption.name(), request.methodName, request.parameterType, request.resultType, "\n\n");
+	        HongMybatisHelper.saveXml(domModel);
+	        HongEditorHelper.openXmlEditorAndSelectById(xmlFile, request.methodName);
+        } catch (Exception e) {
+	        e.printStackTrace();
+	        HongMessagePopupUtil.showErrMsg("Mybatis xml을 처리하다가 에러 ("+e.toString()+")");
+        }
+	}
 
 
 

@@ -1,24 +1,31 @@
-package rocklike.plugin.jdt;
+package rocklike.plugin.jdt.kt;
 
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaModelException;
 
-import rocklike.plugin.jdt.kt.KtCorecmsResolver;
 import rocklike.plugin.util.HongJdtHelper;
 
 public class KtDependentResolver {
 
-	public boolean isDaoImplClass(IType t){
+	public static boolean isDaoImplClass(IType t){
+		if(t==null){
+			return false;
+		}
 		String fullName = t.getFullyQualifiedName();
 		return fullName.startsWith("com.kt.cms") && fullName.indexOf(".dao.impl")>0;
 	}
 
-	public boolean isSelectedClassIsDaoImpl() throws JavaModelException{
-		IType selType = HongJdtHelper.resolveSelectedType();
-		return isDaoImplClass(selType);
+	public static boolean isSelectedClassIsDaoImpl() {
+        try {
+        	IType selType = HongJdtHelper.resolveSelectedType();
+        	return isDaoImplClass(selType);
+        } catch (JavaModelException e) {
+	        e.printStackTrace();
+	        return false;
+        }
 	}
 
-	public IType getDaoInterface(IType daoImpl) throws JavaModelException{
+	public static IType getDaoInterface(IType daoImpl) throws JavaModelException{
 		if(!isDaoImplClass(daoImpl)){
 			return null;
 		}

@@ -3,6 +3,7 @@ package rocklike.plugin.jdt.quickassist;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
@@ -12,6 +13,7 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.window.Window;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -22,6 +24,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
 import rocklike.plugin.jdt.CallingMethodExtractor;
+import rocklike.plugin.jdt.kt.KtDependentResolver;
+import rocklike.plugin.srcgen.dao.GenDaoMethodDialog;
+import rocklike.plugin.srcgen.wizards.HongNewFileCreateWizard;
 import rocklike.plugin.util.HongEclipseUtil;
 import rocklike.plugin.util.HongEditorHelper;
 import rocklike.plugin.util.HongJdtHelper;
@@ -29,7 +34,7 @@ import rocklike.plugin.util.HongMessagePopupUtil;
 
 public class HongContextMenuDialog extends Dialog {
 
-	enum WorkType{GenSetterCalling, GenVarFromGetter, MethodCallingTree};
+	enum WorkType{GenSetterCalling, GenVarFromGetter, MethodCallingTree, DaoMethodCreate, CreateNewFile};
 
 	private WorkType workType;
 	private List<Button> radioButtons = new ArrayList();
@@ -59,9 +64,16 @@ public class HongContextMenuDialog extends Dialog {
 		addRadioButton(container, "setter 호출 만들기." , WorkType.GenSetterCalling);
 		addRadioButton(container, "getter로부터 받는 변수 만들기" , WorkType.GenVarFromGetter);
 		addRadioButton(container, "메소드 호출 추적하기" , WorkType.MethodCallingTree);
+		addRadioButton(container, "Dao에 메소드 추가" , WorkType.DaoMethodCreate);
+		addRadioButton(container, "클래스 만들기(controller,service,dao,query xml등)" , WorkType.CreateNewFile);
+
+		if(!KtDependentResolver.isSelectedClassIsDaoImpl()){
+			radioButtons.get(3).setEnabled(false);
+		}
 
 		return container;
 	}
+
 
 	private void addRadioButton(Composite parent, String name, WorkType workType){
 		Button b = new Button(parent, SWT.RADIO);
@@ -179,6 +191,29 @@ public class HongContextMenuDialog extends Dialog {
 			try {
 	            CallingMethodExtractor.extractCallingMethodsAndOpen(cu, offset);
             } catch (JavaModelException e) {
+	            e.printStackTrace();
+	            HongMessagePopupUtil.showErrMsg(e);
+            }
+
+
+		}else if(workType==WorkType.DaoMethodCreate){
+			System.out.println("== Dao에 메소드 추가");
+			try {
+	            new GenDaoMethodDialog(icompilationunitAndOffset.icu.getAllTypes()[0]).open();
+            } catch (JavaModelException e) {
+	            e.printStackTrace();
+	            HongMessagePopupUtil.showErrMsg(e);
+            }
+
+		}else if(workType==WorkType.CreateNewFile){
+			System.out.println("== 클래스 만들기");
+			try {
+				HongNewFileCreateWizard wizard = new HongNewFileCreateWizard();
+				IProject thisProject = HongEclipseUtil.getActiveEditorProject();
+				wizard.setProject(thisProject);
+				WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), wizard);
+				dialog.open();
+            } catch (Exception e) {
 	            e.printStackTrace();
 	            HongMessagePopupUtil.showErrMsg(e);
             }

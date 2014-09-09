@@ -49,24 +49,24 @@ public class MethodCallTreeViewer extends ViewPart {
 	private Text excludeMethodText;
 	private Label notiLabel;
 	private Button clearCacheBtn;
-	
+
 	private final String EXCLUDE_CLASS_TEXT = "__hong_EXCLUDE_CLASS_TEXT__";
 	private final String EXCLUDE_METHOD_TEXT = "__hong_EXCLUDE_METHOD_TEXT__";
-	
-	private final String DEFAULT_NOTI_MSG = "[단축키] 자바에디터에서 ctrl+alt+shitft+H , 더블클릭하면 해당 소스로 이동";
-	
+
+	private final String DEFAULT_NOTI_MSG = "더블클릭하면 해당 소스로 이동함.";
+
 	public MethodCallTreeViewer() {
 		super();
 	}
 
 	public void createPartControl(Composite parent) {
 		GridLayoutFactory.fillDefaults().spacing(1,1).numColumns(1).equalWidth(false).applyTo(parent);
-		
+
 		Group excludesConditionGroup = new Group(parent, SWT.NULL);
 		excludesConditionGroup.setText("제외시킬 클래스/메소드명 (코마로 구분)");
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.BEGINNING).grab(true, false).applyTo(excludesConditionGroup);
 		GridLayoutFactory.fillDefaults().spacing(0,0).margins(2,2).numColumns(2).applyTo(excludesConditionGroup);
-		
+
 		Label label;
 		label = new Label(excludesConditionGroup, SWT.NULL);
 		label.setText("클래스명들");
@@ -78,7 +78,7 @@ public class MethodCallTreeViewer extends ViewPart {
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.FILL).grab(false, false).applyTo(label);
 		excludeMethodText = new Text(excludesConditionGroup, SWT.BORDER);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, false).applyTo(excludeMethodText);
-		
+
 		Composite msgComposite = new Composite(parent, SWT.NULL);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, false).applyTo(msgComposite);
 		GridLayoutFactory.fillDefaults().spacing(0,0).margins(0,0).numColumns(2).applyTo(msgComposite);
@@ -89,28 +89,28 @@ public class MethodCallTreeViewer extends ViewPart {
 		clearCacheBtn = new Button(msgComposite, SWT.PUSH);
 		clearCacheBtn.setText("cache clear");
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.CENTER).grab(false, false).applyTo(clearCacheBtn);
-		
-		
+
+
 		Tree addressTree = new Tree(parent, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION );
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).grab(true, true).applyTo(addressTree);
-		
+
 		addressTree.setHeaderVisible(true);
 		treeViewer = new TreeViewer(addressTree);
 		createTreeColumns(addressTree);
 		treeViewer.setContentProvider(new MethodNodeProvider());
 		treeViewer.setLabelProvider(new MethodLabelProvider());
 		treeViewer.expandAll();
-		
+
 		new RowHeightAdjustor(treeViewer.getTree());
-		
+
 		addEvent();
-		
+
 		// preference
 		excludeClassText.setText(PreferenceStoreHelper.getString(EXCLUDE_CLASS_TEXT));
 		excludeMethodText.setText(PreferenceStoreHelper.getString(EXCLUDE_METHOD_TEXT));
 	}
 
-	
+
 
 	private void createTreeColumns(Tree addressTree) {
 		TreeColumn column1 = new TreeColumn(addressTree, SWT.LEFT);
@@ -133,22 +133,22 @@ public class MethodCallTreeViewer extends ViewPart {
 		// 이렇게 가상으로 root를 만들어주지 않으면, tree에서 원래의 root가 보이지 않는다.
 		MethodInvocationNode psuedoRoot = new MethodInvocationNode(null, null);
 		psuedoRoot.addChild(node);
-		
+
 		treeViewer.setInput(psuedoRoot);
 		treeViewer.expandToLevel(2);
 		showBusy(false);
 	}
-	
-	
-	
+
+
+
 	public void clearContents(){
 		treeViewer.setInput(null);
 	}
-	
-	
-	
-	
-	
+
+
+
+
+
 	void addEvent(){
 		excludeClassText.addModifyListener(new ModifyListener() {
 			@Override
@@ -164,12 +164,12 @@ public class MethodCallTreeViewer extends ViewPart {
 				ExcludingClzMethodNameResolver.get().setExcludingMethod(excludeMethodText.getText());
 			}
 		});
-		
+
 		excludeClassText.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				System.out.printf("== viewer disposed : exclude class text \n" );
-				PreferenceStoreHelper.setString(EXCLUDE_CLASS_TEXT, excludeClassText.getText());				
+				PreferenceStoreHelper.setString(EXCLUDE_CLASS_TEXT, excludeClassText.getText());
 			}
 		});
 		excludeMethodText.addDisposeListener(new DisposeListener() {
@@ -179,31 +179,31 @@ public class MethodCallTreeViewer extends ViewPart {
 				PreferenceStoreHelper.setString(EXCLUDE_METHOD_TEXT, excludeMethodText.getText());
 			}
 		});
-		
-		
-		
+
+
+
 		final Tree tree = treeViewer.getTree();
-		
+
 		tree.addMouseListener(new MouseListener(){
 			@Override
             public void mouseDoubleClick(MouseEvent e) {
 				System.out.printf("== double click (%s, %s) \n", e.x, e.y);
 				System.out.printf("== item count : %s \n", tree.getItems().length);
 				System.out.printf("== row count : %s \n", tree.getColumns().length);
-				
+
 				Point p = new Point(e.x, e.y);
 				ViewerCell c = treeViewer.getCell(p);
 				Object obj = c.getElement();
-				
+
 				if(!(obj instanceof MethodInvocationNode)){
 					return;
 				}
-				
+
 				int idx = TreeTableCellIndexResolver.resolveTreeColumnIndex(tree, new Point(e.x, e.y));
 				System.out.printf("== tree idx : %s \n", idx);
 				MethodInvocationNode node = (MethodInvocationNode)obj;
 				System.out.printf("== double click : %s \n", node.getName());
-			
+
 				if(idx==0){
 					node.openInvocation();
 				}else if(idx==1){
@@ -217,8 +217,8 @@ public class MethodCallTreeViewer extends ViewPart {
             public void mouseUp(MouseEvent e) {
             }
 		});
-		
-		
+
+
 		clearCacheBtn.addSelectionListener(new SelectionAdapter() {
 
 			@Override
@@ -228,13 +228,13 @@ public class MethodCallTreeViewer extends ViewPart {
 				CacheSupportCompilationUnit.get().clearCache();
 				CachedMethodDeclarationHolder.get().clearCache();
             }
-			
+
 		});
 	}
-	
-	
-	
-	
+
+
+
+
 	class MethodNodeProvider implements ITreeContentProvider {
 		@Override
 		public Object[] getChildren(Object e) {
@@ -242,11 +242,11 @@ public class MethodCallTreeViewer extends ViewPart {
 				return new Object[0];
 			}
 			MethodInvocationNode node = (MethodInvocationNode)e;
-			
+
 			if(!node.isProcessed()){
 				CallingMethodExtractor.extractCallingMethods(node);
 			}
-			
+
 			if(!node.hasChildren()){
 				return new Object[0];
 			}
@@ -258,7 +258,7 @@ public class MethodCallTreeViewer extends ViewPart {
 			if(!(e instanceof MethodInvocationNode)){
 				return null;
 			}
-			
+
 			MethodInvocationNode node = (MethodInvocationNode)e;
 			return node.getParent();
 		}
@@ -268,7 +268,7 @@ public class MethodCallTreeViewer extends ViewPart {
 			if(!(e instanceof MethodInvocationNode)){
 				return false;
 			}
-			
+
 			MethodInvocationNode node = (MethodInvocationNode)e;
 			if(!node.isProcessed()){
 				CallingMethodExtractor.extractCallingMethods(node);
@@ -281,7 +281,7 @@ public class MethodCallTreeViewer extends ViewPart {
 			if(!(e instanceof MethodInvocationNode)){
 				return new Object[0];
 			}
-			
+
 			MethodInvocationNode node = (MethodInvocationNode)e;
 			return node.getChildren().toArray();
 		}
@@ -294,9 +294,9 @@ public class MethodCallTreeViewer extends ViewPart {
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 		}
 	}
-	
-	
-	
+
+
+
 
 	class MethodLabelProvider implements ITableLabelProvider {
 		@Override
@@ -313,7 +313,7 @@ public class MethodCallTreeViewer extends ViewPart {
 			switch (columnIndex) {
 			case 0:
 				if(node.isRoot()){
-					
+
 				}
 				return node.getName();
 			case 1:
@@ -335,7 +335,7 @@ public class MethodCallTreeViewer extends ViewPart {
 					return mb.getDeclaringClass().getName() + " :: " + mb.getName() + " ("+sb + ")";
 				}
 				break;
-			case 2 : 
+			case 2 :
 				return null;
 			default:
 				break;
@@ -374,8 +374,8 @@ public class MethodCallTreeViewer extends ViewPart {
 	    super.dispose();
     }
 
-	
 
-	
-	
+
+
+
 }

@@ -14,11 +14,18 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 public class HongJavaSourceHelper {
 
 	public static void addImport(ICompilationUnit icu, String fullClzName) throws JavaModelException{
+		if(fullClzName.startsWith("java.lang.") || fullClzName.indexOf(".")<0){
+			return;
+		}
 		icu.createImport(fullClzName, null, null);
 	}
 
 
 	public static void addImportIfNotExists(ICompilationUnit icu, final String fullClzName) throws JavaModelException{
+		if(fullClzName==null || fullClzName.equals("") || fullClzName.startsWith("java.lang.") || fullClzName.indexOf(".")<0 ){
+			return;
+		}
+
 		CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
 		final ObjectHolder<String> holder = new ObjectHolder();
 		cu.accept(new ASTVisitor(){
@@ -89,7 +96,7 @@ public class HongJavaSourceHelper {
 	}
 
 
-	public static void addMethod(IType type, String contents) throws JavaModelException{
-		type.createMethod(contents, null, true, null);
+	public static IMethod addMethod(IType type, String contents) throws JavaModelException{
+		return type.createMethod(contents, null, true, null);
 	}
 }

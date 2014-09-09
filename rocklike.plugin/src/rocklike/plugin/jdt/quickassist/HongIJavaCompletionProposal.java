@@ -34,7 +34,7 @@ public class HongIJavaCompletionProposal implements IJavaCompletionProposal, ICo
 
 	@Override
 	public String getAdditionalProposalInfo() {
-		return "각종 잡다구리한 utility들";
+		return "getter/setter등을 만들어 주는 등의 utility";
 	}
 
 	@Override

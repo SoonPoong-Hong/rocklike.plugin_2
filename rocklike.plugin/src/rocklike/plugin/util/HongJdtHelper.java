@@ -502,20 +502,8 @@ public class HongJdtHelper {
 
 
 	public static IType resolveSelectedType() throws JavaModelException{
-		ITextSelection textSelection = HongEclipseUtil.getTextSelection();
-		int pos = textSelection.getOffset();
 		ICompilationUnit icu = getSelectedICompilationUnit();
-		IJavaElement je = icu.getElementAt(pos);
-		if(je instanceof IType){
-			return (IType)je;
-		}
-		if(je!=null){
-			je = je.getParent();
-		}
-		if(je instanceof IType){
-			return (IType)je;
-		}
-		return null;
+		return icu.getTypes()[0];
 	}
 
 

@@ -73,6 +73,11 @@
             id="rocklike.plugin.forTestCommand"
             name="테스트용도 입니다.">
       </command>
+      <command
+            defaultHandler="rocklike.plugin.handlers.OpenHongContextMenuDialogHandler"
+            id="rocklike.plugin.openHongContextMenuDialog"
+            name="홍 메뉴 띄우기">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.handlers">
@@ -315,7 +320,7 @@
          </parameter>
       </key>
       <key
-            commandId="rocklike.plugin.methodCall.viewer.show"
+            commandId="rocklike.plugin.openHongContextMenuDialog"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+M2+M3+H">

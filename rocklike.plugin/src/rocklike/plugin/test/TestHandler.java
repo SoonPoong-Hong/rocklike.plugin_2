@@ -4,8 +4,11 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.ui.IEditorPart;
 
 import rocklike.plugin.srcgen.dao.GenDaoMethodDialog;
+import rocklike.plugin.util.HongEclipseUtil;
+import rocklike.plugin.util.HongEditorHelper;
 import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.HongMybatisHelper;
 
@@ -34,6 +37,8 @@ public class TestHandler extends AbstractHandler {
 //			IType t = HongJdtHelper.getSelectedICompilationUnit().getTypes()[0];
 //			String pkg = HongMybatisHelper.assumeMybatisQueryXmlPackageId(t);
 //			System.out.println(pkg);
+
+			IEditorPart activeEditor = HongEclipseUtil.getActiveEditor();
 
 			IType t = HongJdtHelper.getSelectedICompilationUnit().getTypes()[0];
 			new GenDaoMethodDialog(t).open();

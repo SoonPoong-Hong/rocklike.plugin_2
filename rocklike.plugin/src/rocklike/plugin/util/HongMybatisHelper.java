@@ -1,7 +1,11 @@
 package rocklike.plugin.util;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IType;
@@ -15,6 +19,14 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.wst.sse.core.StructuredModelManager;
+import org.eclipse.wst.sse.core.internal.provisional.IStructuredModel;
+import org.eclipse.wst.xml.core.internal.document.ElementImpl;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMDocument;
+import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 import rocklike.plugin.jdt.kt.KtCorecmsResolver;
 
@@ -240,7 +252,7 @@ public class HongMybatisHelper {
 
 
 
-	public static boolean isDaoImplClass() throws JavaModelException{
+	public static boolean isSelectionIsDaoImplClass() throws JavaModelException{
 		ICompilationUnit icu = HongJdtHelper.getSelectedICompilationUnit();
 		IType type = icu.getTypes()[0];
 		if(!KtCorecmsResolver.isBelongsToCorecmsClass(type)){
@@ -253,6 +265,53 @@ public class HongMybatisHelper {
 		}else{
 			return false;
 		}
+	}
+
+
+	public static void saveXml(IDOMModel domModel) throws UnsupportedEncodingException, IOException, CoreException{
+		domModel.save();
+	}
+
+
+
+	public static IDOMModel appendToLastInMybatisXml(IFile xmlFile, String tag, String id, String parameterType
+			, String resultType, String content) throws IOException, CoreException{
+
+		IStructuredModel sm = StructuredModelManager.getModelManager().getModelForRead(xmlFile);
+		if(sm instanceof IDOMModel){
+			IDOMModel domModel = (IDOMModel)sm;
+			IDOMDocument domDocument = domModel.getDocument();
+
+			NodeList nodeList = domDocument.getElementsByTagName("mapper");
+			Node mapperNode = nodeList.item(0);
+
+			Text textNode = domDocument.createTextNode("\n\n");
+			mapperNode.appendChild(textNode);
+
+			XmlElementBuilder builder = new XmlElementBuilder(domDocument, tag);
+
+			if(id!=null){
+				builder.addAttr("id", id);
+			}
+			if(parameterType!=null){
+				builder.addAttr("parameterType", parameterType);
+			}
+			if("select".equals(tag)){
+				builder.addAttr("resultType", resultType);
+				builder.addAttr("useCache", "false");
+			}
+			if(content!=null){
+				builder.setContent(content);
+			}
+
+			ElementImpl elem = builder.build();
+
+			mapperNode.appendChild(elem);
+			mapperNode.appendChild(domDocument.createTextNode("\n\n"));
+
+			return domModel;
+		}
+		return null;
 	}
 
 
