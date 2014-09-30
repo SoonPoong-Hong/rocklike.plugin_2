@@ -13,6 +13,7 @@ import org.eclipse.ui.ide.ResourceUtil;
 
 import rocklike.plugin.jdt.quickassist.HongContextMenuDialog;
 import rocklike.plugin.jdt.quickassist.ICompilationUnitAndOffset;
+import rocklike.plugin.srcgen.dialog.HongNoJavaContextMenuDialog;
 import rocklike.plugin.util.HongEclipseUtil;
 import rocklike.plugin.util.HongEditorHelper;
 import rocklike.plugin.util.HongJdtHelper;
@@ -22,20 +23,39 @@ public class OpenHongContextMenuDialogHandler extends AbstractHandler implements
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		IFile ifile = ResourceUtil.getFile(HongEclipseUtil.getActiveEditor().getEditorInput());
-		if(ifile==null || !ifile.getName().endsWith(".java")){
-			HongMessagePopupUtil.showErrMsg("자바소스를 연 상태에서 호출하세요.");
+		ITextSelection textSelection = HongEclipseUtil.getTextSelection();
+		if(textSelection==null){
+			HongMessagePopupUtil.showErrMsg("에디터에서 소스(java소스등)를 열어서 커서를 위치시킨후에 호출하세요.");
 			return null;
 		}
+
+		IFile ifile = ResourceUtil.getFile(HongEclipseUtil.getActiveEditor().getEditorInput());
+		if(ifile==null){
+			HongMessagePopupUtil.showErrMsg("에디터에서 소스를 연후에 호출하세요.");
+			return null;
+		}
+
+		if(ifile.getName().endsWith(".java")){
+			openJavaMenu(event, textSelection);
+		}else{
+			openNoJavaMenu(event, textSelection);
+		}
+
+
+		return null;
+	}
+
+
+	private void openJavaMenu(ExecutionEvent event, ITextSelection textSelection){
 
 		ICompilationUnit icu = HongJdtHelper.getSelectedICompilationUnit();
 		IDocument doc = HongEditorHelper.getIDocument();
 		if(icu==null || doc==null){
 			HongMessagePopupUtil.showErrMsg("자바소스를 연 상태에서 호출하세요.");
-			return null;
 		}
+
 		int offset = 0;
-		ITextSelection textSelection = HongEclipseUtil.getTextSelection();
+
 		if(textSelection!=null){
 			offset = textSelection.getOffset();
 		}
@@ -44,7 +64,11 @@ public class OpenHongContextMenuDialogHandler extends AbstractHandler implements
 		HongContextMenuDialog dialog = new HongContextMenuDialog(Display.getDefault().getActiveShell());
 		dialog.setICompilationUnitAndOffset(param);
 		dialog.open();
-		return null;
 	}
 
+	private void openNoJavaMenu(ExecutionEvent event, ITextSelection textSelection){
+		IDocument doc = HongEditorHelper.getIDocument();
+		HongNoJavaContextMenuDialog dialog = new HongNoJavaContextMenuDialog(Display.getDefault().getActiveShell(), doc, textSelection);
+		dialog.open();
+	}
 }

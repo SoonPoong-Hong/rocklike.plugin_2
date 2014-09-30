@@ -51,4 +51,18 @@ public class JavaUITest {
 		};
 	}
 
+
+	private String go(){
+		return "잘 나가냐.. " +  this.toString();
+	}
+
+
+	private String go(String a){
+		return "잘 나가냐.. " + a ;
+	}
+
+	private String go(String a, String b){
+		return "잘 나가냐.. " + a + "::" + b;
+	}
+
 }

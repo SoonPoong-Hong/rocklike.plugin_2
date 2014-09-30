@@ -1,29 +1,29 @@
 package rocklike.plugin.jdt.quickassist;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
+import rocklike.plugin.util.HongJdtHelper;
 import rocklike.plugin.util.ScrolledCompositeCreater;
 
 public class GetterSelectionDialog extends Dialog {
 	private List<Button> checkBoxes = new ArrayList();
 	private List<IMethodBinding> selectedSetterNames = new ArrayList();
-	private ITypeBinding typeBinding;
+	private MethodInvocation methodInvocation;
 
 	public GetterSelectionDialog(Shell parentShell) {
 	    super(parentShell);
@@ -71,18 +71,11 @@ public class GetterSelectionDialog extends Dialog {
 		new Label(inside, SWT.SEPARATOR | SWT.HORIZONTAL);
 
 
-
-		ColumnDescVO descVo = null;
-		try {
-            descVo = ColumnDescriptionStore.readFromLocal();
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
+		ColumnDescVO descVo = ColumnDescriptionStore.readFromLocal();
 
 
-
-		if(typeBinding!=null){
-			IMethodBinding[] methods = typeBinding.getDeclaredMethods();
+		if(methodInvocation!=null){
+			List<IMethodBinding> methods = HongJdtHelper.gatherDeclaredMethods(methodInvocation);
 
 			for(IMethodBinding mb : methods){
 				String name = mb.getName();
@@ -114,9 +107,6 @@ public class GetterSelectionDialog extends Dialog {
 		return true;
     }
 
-	public void setTypeBinding(ITypeBinding tb) {
-		this.typeBinding = tb;
-	}
 
 	@Override
     protected void okPressed() {
@@ -124,5 +114,11 @@ public class GetterSelectionDialog extends Dialog {
 	    super.okPressed();
     }
 
+	public MethodInvocation getMethodInvocation() {
+		return methodInvocation;
+	}
 
+	public void setMethodInvocation(MethodInvocation methodInvocation) {
+		this.methodInvocation = methodInvocation;
+	}
 }

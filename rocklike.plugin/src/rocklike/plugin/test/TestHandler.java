@@ -4,6 +4,10 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.IDocument;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.ui.IEditorPart;
 
 import rocklike.plugin.srcgen.dao.GenDaoMethodDialog;
@@ -38,16 +42,33 @@ public class TestHandler extends AbstractHandler {
 //			String pkg = HongMybatisHelper.assumeMybatisQueryXmlPackageId(t);
 //			System.out.println(pkg);
 
-			IEditorPart activeEditor = HongEclipseUtil.getActiveEditor();
-
-			IType t = HongJdtHelper.getSelectedICompilationUnit().getTypes()[0];
-			new GenDaoMethodDialog(t).open();
-
+			doTestMethodInvocation();
 
         } catch (Exception e) {
 	        e.printStackTrace();
         }
 		return null;
 	}
+
+
+
+	void doTest(ExecutionEvent event) throws JavaModelException{
+		IEditorPart activeEditor = HongEclipseUtil.getActiveEditor();
+		IType t = HongJdtHelper.getSelectedICompilationUnit().getTypes()[0];
+		new GenDaoMethodDialog(t).open();
+	}
+
+	void doTest2(ExecutionEvent event) throws JavaModelException, BadLocationException{
+		ITextSelection ts = HongEclipseUtil.getTextSelection();
+		IDocument doc = HongEditorHelper.getIDocument();
+		doc.replace(ts.getOffset(), ts.getLength(), "====== new ======");
+	}
+
+
+	private void doTestMethodInvocation() {
+		new MethodInvocationTest().visit();
+
+    }
+
 
 }

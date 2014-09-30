@@ -28,20 +28,15 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.search.SearchEngine;
-import org.eclipse.jdt.ui.IJavaElementSearchConstants;
+import org.eclipse.jdt.core.util.IMethodInfo;
 import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.dialogs.SelectionDialog;
 import org.eclipse.ui.ide.ResourceUtil;
 
 import rocklike.plugin.jdt.CacheSupportCompilationUnit;
@@ -123,6 +118,9 @@ public class HongJdtHelper {
 		return v.holder.get();
 	}
 
+	/**
+	 * @deprecated 검증이 안됨.
+	 */
 	public static MethodInvocation resolveMethodInvocationByPosition2(CompilationUnit cu,int pos){
 		 IJavaElement srcJavaElement = null;
         try {
@@ -499,7 +497,12 @@ public class HongJdtHelper {
 	public static String getCallerObjectName(MethodInvocation mi){
 		return mi.getExpression().toString();
 	}
-
+	
+	
+	public static ITypeBinding getCallerTypeBinding(MethodInvocation mi){
+		return mi.getExpression().resolveTypeBinding();
+	}
+	
 
 	public static IType resolveSelectedType() throws JavaModelException{
 		ICompilationUnit icu = getSelectedICompilationUnit();
@@ -511,6 +514,72 @@ public class HongJdtHelper {
 		ITypeHierarchy typeHierarchy = t.newTypeHierarchy(null);
 		IType[] allInterfaces = typeHierarchy.getAllInterfaces();
 		return allInterfaces;
+	}
+
+	public static List<IMethodBinding> gatherDeclaredMethods(MethodInvocation mi){
+		ITypeBinding resolveTypeBinding = mi.getExpression().resolveTypeBinding();
+		return gatherDeclaredMethods(resolveTypeBinding);
+	}
+	
+	
+	public static List<IMethodBinding> gatherDeclaredMethods(ITypeBinding tb){
+		List<IMethodBinding> list = new ArrayList();
+		IMethodBinding[] methods = tb.getDeclaredMethods();
+		if(methods!=null){;
+			list.addAll(Arrays.asList(methods));
+		}
+		
+		while( (tb=tb.getSuperclass()) !=null ){
+			methods = tb.getDeclaredMethods();
+			if(methods!=null){
+				list.addAll(Arrays.asList(methods));;
+			}
+		}
+		
+		// 중복된거 제거
+		for(int i=list.size()-1; i>=0; i--){
+			IMethodBinding thisMb = list.get(i);
+			for(int k=i-1; k>=0; k--){
+				IMethodBinding thisMb2 = list.get(k);
+				if(equals(thisMb,thisMb2)){
+					list.remove(k);
+				}
+			}
+		}
+		
+		return list;
+	}
+	
+	
+	public static boolean equals(IMethodBinding m, IMethodBinding m2){
+		if(m==null || m2==null){
+			return false;
+		}
+		if(!m.getName().equals(m2.getName())){
+			return false;
+		}
+		ITypeBinding[] pt = m.getParameterTypes();
+		ITypeBinding[] pt2 = m2.getParameterTypes();
+		return Arrays.equals(pt, pt2);
+	}
+	
+
+	public static MethodInvocation getInnerNextMethodInvocation(MethodInvocation parent){
+		final ObjectHolder<MethodInvocation> holder = new ObjectHolder();
+		parent.accept(new ASTVisitor() {
+			int cnt = -1;
+			@Override
+            public boolean visit(MethodInvocation node) {
+				cnt++;
+				if(cnt==0){
+					return true;
+				}else if(cnt==1){
+					holder.put(node);
+				}
+				return false;
+            }
+		});
+		return holder.get();
 	}
 
 }

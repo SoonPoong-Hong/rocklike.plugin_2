@@ -34,7 +34,7 @@ import rocklike.plugin.util.HongMessagePopupUtil;
 
 public class HongContextMenuDialog extends Dialog {
 
-	enum WorkType{GenSetterCalling, GenVarFromGetter, MethodCallingTree, DaoMethodCreate, CreateNewFile};
+	enum WorkType{GenSetterCalling, GenSetterFromGetter, GenVarFromGetter, MethodCallingTree, DaoMethodCreate, CreateNewFile};
 
 	private WorkType workType;
 	private List<Button> radioButtons = new ArrayList();
@@ -62,18 +62,32 @@ public class HongContextMenuDialog extends Dialog {
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.BEGINNING).grab(true, false).applyTo(new Label(container, SWT.SEPARATOR | SWT.HORIZONTAL));
 
 		addRadioButton(container, "setter 호출 만들기." , WorkType.GenSetterCalling);
+		addRadioButton(container, "getter로 setter 호출 만들기." , WorkType.GenSetterFromGetter);
 		addRadioButton(container, "getter로부터 받는 변수 만들기" , WorkType.GenVarFromGetter);
 		addRadioButton(container, "메소드 호출 추적하기" , WorkType.MethodCallingTree);
 		addRadioButton(container, "Dao에 메소드 추가" , WorkType.DaoMethodCreate);
 		addRadioButton(container, "클래스 만들기(controller,service,dao,query xml등)" , WorkType.CreateNewFile);
 
 		if(!KtDependentResolver.isSelectedClassIsDaoImpl()){
-			radioButtons.get(3).setEnabled(false);
+			Button buttonByWorkType = getButtonByWorkType(WorkType.DaoMethodCreate);
+			if(buttonByWorkType!=null){
+				buttonByWorkType.setEnabled(false);
+			}
 		}
 
 		return container;
 	}
 
+
+	private Button getButtonByWorkType(WorkType t){
+		for(Button b : radioButtons){
+			WorkType thisType = (WorkType)b.getData();
+			if(thisType==t){
+				return b;
+			}
+		}
+		return null;
+	}
 
 	private void addRadioButton(Composite parent, String name, WorkType workType){
 		Button b = new Button(parent, SWT.RADIO);
@@ -95,7 +109,7 @@ public class HongContextMenuDialog extends Dialog {
 			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icompilationunitAndOffset.icu) ;
 			MethodInvocation mi = HongJdtHelper.resolveMethodInvocationByPosition(cu, icompilationunitAndOffset.offset);
 			if(mi==null){
-				HongMessagePopupUtil.showErrMsg("Setter/Getter 메소드 부분에 커서를 두고서 하세요.");
+				HongMessagePopupUtil.showErrMsg("Setter 메소드 부분에 커서를 두고서 하세요.");
 				close();
 				return ;
 			}
@@ -103,19 +117,11 @@ public class HongContextMenuDialog extends Dialog {
 			IMethodBinding mb = mi.resolveMethodBinding();
 
 			SetterCallSelectionDialog dialog = new SetterCallSelectionDialog(Display.getDefault().getActiveShell());
-			dialog.setTypeBinding(mb.getDeclaringClass());
+			dialog.setMethodInvocation(mi);
 			if(dialog.open()==Window.OK){
 				List<String> selectedSetterNames = dialog.getSelectedSetterNames();
 				StringBuilder sb = new StringBuilder();
-				ColumnDescVO columnDescVO = null;
-				try {
-	                columnDescVO = ColumnDescriptionStore.readFromLocal();
-                } catch (Exception e) {
-	                e.printStackTrace();
-                }
-				if(columnDescVO==null){
-					columnDescVO = new ColumnDescVO();
-				}
+				ColumnDescVO columnDescVO = ColumnDescriptionStore.readFromLocal();
 
 				for(String s : selectedSetterNames){
 					String desc = ColumnDescriptionStore.getColumnDescriptionApproximately(s.substring(3), columnDescVO);
@@ -134,31 +140,65 @@ public class HongContextMenuDialog extends Dialog {
 
 
 
-		}else if(workType==WorkType.GenVarFromGetter){
+		}else if(workType==WorkType.GenSetterFromGetter){
 			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icompilationunitAndOffset.icu) ;
 			MethodInvocation mi = HongJdtHelper.resolveMethodInvocationByPosition(cu, icompilationunitAndOffset.offset);
 			if(mi==null){
-				HongMessagePopupUtil.showErrMsg("Setter/Getter 메소드 부분에 커서를 두고서 하세요.");
+				HongMessagePopupUtil.showErrMsg("Setter 메소드 부분에 커서를 두고서 하세요.");
 				close();
 				return ;
 			}
 			mi.resolveTypeBinding().getName();
+			MethodInvocation paramMi = HongJdtHelper.getInnerNextMethodInvocation(mi);
+			if(paramMi==null){
+				HongMessagePopupUtil.showErrMsg("Getter로 Setter를 하는 코드위에 커서를 두고서 하세요. \n(예)\n contsBas.setSersId(sersBas.getSersId());");
+				close();
+				return;
+			}
 			IMethodBinding mb = mi.resolveMethodBinding();
+			String paramCaller = HongJdtHelper.getCallerObjectName(paramMi);
+
+			SetterCallSelectionDialog dialog = new SetterCallSelectionDialog(Display.getDefault().getActiveShell());
+			dialog.setMethodInvocation(mi);
+			if(dialog.open()==Window.OK){
+				List<String> selectedSetterNames = dialog.getSelectedSetterNames();
+				StringBuilder sb = new StringBuilder();
+				ColumnDescVO columnDescVO = ColumnDescriptionStore.readFromLocal();
+
+				for(String s : selectedSetterNames){
+					String desc = ColumnDescriptionStore.getColumnDescriptionApproximately(s.substring(3), columnDescVO);
+					sb.append(String.format("%s.%s(%s.%s()); %s\n"
+							, HongJdtHelper.getCallerObjectName(mi), s, paramCaller, "g"+s.substring(1), (desc==null?"":"// " + desc)) );
+				}
+				if(sb.length()>0){
+					try {
+						int lineNum = icompilationunitAndOffset.doc.getLineOfOffset(icompilationunitAndOffset.offset);
+						HongEditorHelper.writeToNextLine(icompilationunitAndOffset.doc , lineNum, sb.toString() );
+					} catch (BadLocationException e) {
+						e.printStackTrace();
+						HongMessagePopupUtil.showErrMsg(e);
+					}
+				}
+			}
+
+
+
+		}else if(workType==WorkType.GenVarFromGetter){
+			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icompilationunitAndOffset.icu) ;
+			MethodInvocation mi = HongJdtHelper.resolveMethodInvocationByPosition(cu, icompilationunitAndOffset.offset);
+			if(mi==null){
+				HongMessagePopupUtil.showErrMsg("Getter 메소드 부분에 커서를 두고서 하세요.");
+				close();
+				return ;
+			}
+			mi.resolveTypeBinding().getName();
 
 			GetterSelectionDialog dialog = new GetterSelectionDialog(Display.getDefault().getActiveShell());
-			dialog.setTypeBinding(mb.getDeclaringClass());
+			dialog.setMethodInvocation(mi);
 			if(dialog.open()==Window.OK){
 				List<IMethodBinding> selGetters = dialog.getSelectedGetters();
 				StringBuilder sb = new StringBuilder();
-				ColumnDescVO columnDescVO = null;
-				try {
-	                columnDescVO = ColumnDescriptionStore.readFromLocal();
-                } catch (Exception e) {
-	                e.printStackTrace();
-                }
-				if(columnDescVO==null){
-					columnDescVO = new ColumnDescVO();
-				}
+				ColumnDescVO columnDescVO = ColumnDescriptionStore.readFromLocal();
 
 				for(IMethodBinding thisMb : selGetters){
 					String getterMethodName = thisMb.getName();

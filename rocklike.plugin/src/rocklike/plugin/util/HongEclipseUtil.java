@@ -24,6 +24,9 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.services.IServiceLocator;
 
+import rocklike.plugin.HongPluginActivator;
+import de.loskutov.anyedit.ui.editor.AbstractEditor;
+
 
 public class HongEclipseUtil {
 
@@ -83,13 +86,15 @@ public class HongEclipseUtil {
 
 	public static IWorkbenchWindow getActiveWorkbenchWindow() {
 		if(isUiThread()){
-			return PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+//			return PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+			return HongPluginActivator.getDefault().getWorkbench().getActiveWorkbenchWindow();
 		}else{
-			final ObjectHolder holder = new ObjectHolder();
+			final ObjectHolder<IWorkbenchWindow> holder = new ObjectHolder();
 			Display.getDefault().syncExec(new Runnable(){
 				@Override
 				public void run() {
-					holder.put(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
+//					holder.put(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
+					holder.put(HongPluginActivator.getDefault().getWorkbench().getActiveWorkbenchWindow());
 				}
 			});
 			return (IWorkbenchWindow)holder.get();
@@ -118,11 +123,14 @@ public class HongEclipseUtil {
 
 
 	public static ITextSelection getTextSelection(){
-		ISelection sel = getSelection();
-		if(sel instanceof ITextSelection){
-			return (ITextSelection)sel;
-		}
-		return null;
+		AbstractEditor editor = new AbstractEditor(getActiveEditor());
+		ITextSelection ts = (ITextSelection)editor.getSelectionProvider().getSelection();
+		return ts;
+//		ISelection sel = getSelection();
+//		if(sel instanceof ITextSelection){
+//			return (ITextSelection)sel;
+//		}
+//		return null;
 	}
 
 

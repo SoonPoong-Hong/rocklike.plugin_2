@@ -70,6 +70,7 @@
             name="Column의 description 정보를 읽어오기">
       </command>
       <command
+            defaultHandler="rocklike.plugin.test.TestHandler"
             id="rocklike.plugin.forTestCommand"
             name="테스트용도 입니다.">
       </command>

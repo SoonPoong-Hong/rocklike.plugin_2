@@ -318,7 +318,7 @@ public class HongMybatisHelper {
 
 	public static void main(String[] args) {
 		String path = "src/main/resource/sqlmap/sql/";
-		String s = "com.kt.cms.cuc.dst.dm.dao.DmDao3.selectTargetAid";
+		String s = "com.kt.cms.cuc.common.dao.CommonDao.selectCommonCodeAllList";
 		int pos;
 		pos = s.lastIndexOf(".");
 		if(pos!=-1){

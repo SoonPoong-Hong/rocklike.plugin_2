@@ -39,11 +39,15 @@ public class ColumnDescriptionStore {
 	    oos.close();
 	}
 
-	public static ColumnDescVO readFromLocal() throws Exception{
-	    ObjectInputStream ois = new ObjectInputStream(new FileInputStream(LOCAL_PATH));
-	    ColumnDescVO readVo = (ColumnDescVO)ois.readObject();
-	    ois.close();
-	    return readVo;
+	public static ColumnDescVO readFromLocal() {
+		try {
+			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(LOCAL_PATH));
+			ColumnDescVO readVo = (ColumnDescVO)ois.readObject();
+			ois.close();
+			return readVo;
+        } catch (Exception e) {
+        	return new ColumnDescVO();
+        }
 	}
 
 

@@ -1,7 +1,6 @@
 package rocklike.plugin.util;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,7 +12,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.Region;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.FormEditor;
@@ -27,13 +28,17 @@ import org.eclipse.wst.xml.core.internal.document.ElementImpl;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMDocument;
 import org.eclipse.wst.xml.core.internal.provisional.document.IDOMModel;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 
 public class HongEditorHelper {
 
 	public static ITextEditor findTextEditor(IEditorPart editorPart) {   // => XML multi page인 경우에, text editor로 열리게.
+		return findTextEditor(editorPart, true);
+	}
+
+
+
+	public static ITextEditor findTextEditor(IEditorPart editorPart, boolean openIfMultiPage) {   // => XML multi page인 경우에, text editor로 열리게.
 		if (editorPart instanceof ITextEditor) {
 			return (ITextEditor) editorPart;
 		}
@@ -41,12 +46,14 @@ public class HongEditorHelper {
 		if (editorPart instanceof MultiPageEditorPart) {
 			MultiPageEditorPart multi = (MultiPageEditorPart) editorPart;
 
-            try {
-            	StructuredTextEditor ste = (StructuredTextEditor)multi.getAdapter(StructuredTextEditor.class);
-            	if(ste!=null){
-            		multi.setActiveEditor(ste);
-            		return ste;
-            	}
+			try {
+				StructuredTextEditor ste = (StructuredTextEditor)multi.getAdapter(StructuredTextEditor.class);
+				if(ste!=null){
+					if(openIfMultiPage){
+						multi.setActiveEditor(ste);
+					}
+					return ste;
+				}
 
 				IEditorPart[] editors = multi.findEditors(editorPart.getEditorInput());
 				for (IEditorPart editor : editors) {
@@ -203,9 +210,13 @@ public class HongEditorHelper {
 
 
 	public static IDocument getIDocument(){
-		IDocument doc ;
-		doc = ((ITextEditor)HongEclipseUtil.getActiveEditor()).getDocumentProvider().getDocument(HongEclipseUtil.getActiveEditor().getEditorInput());
-		return doc;
+		IEditorPart activeEditor = HongEclipseUtil.getActiveEditor();
+		if(activeEditor instanceof ITextEditor){
+			return ((ITextEditor)activeEditor).getDocumentProvider().getDocument(activeEditor.getEditorInput());
+		}else{
+			return (findTextEditor(activeEditor, false)).getDocumentProvider().getDocument(activeEditor.getEditorInput());
+		}
+
 	}
 
 
@@ -215,6 +226,17 @@ public class HongEditorHelper {
 		doc.replace(nextLineOffset, 0, msg + "\n");
 	}
 
+
+	public static void writeToNextLine(IDocument doc, ITextSelection ts, String msg) throws BadLocationException{
+		int currLine = ts.getOffset();
+		int nextLineOffset = doc.getLineOffset(currLine) + doc.getLineLength(currLine);
+		doc.replace(nextLineOffset, 0, msg + "\n");
+	}
+
+
+	public static void replaceSelection(IDocument doc, ITextSelection ts, String newStr) throws BadLocationException{
+		doc.replace(ts.getOffset(), ts.getLength(), newStr);
+	}
 
 
 //	public static void main(String[] args) {

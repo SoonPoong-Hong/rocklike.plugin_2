@@ -60,16 +60,16 @@ public class JavaEditorListeningView extends ViewPart {
 	ExecutorService executor;
 	IProject selectedProj;
 
-	
+
 	private final String javaEditorId = "org.eclipse.jdt.ui.CompilationUnitEditor";
-	
+
 	public JavaEditorListeningView() {
 	}
 
 	@Override
 	public void createPartControl(Composite parent) {
 		System.out.println("== 만들어짐.");
-		
+
 		executor = new ThreadPoolExecutor(
 				  1
 				, 3
@@ -84,22 +84,22 @@ public class JavaEditorListeningView extends ViewPart {
 						return t;
 				 }
 		});
-		
+
 		colorProvider = new HongColorProvider();
 		GridLayoutFactory.fillDefaults().numColumns(1).margins(3, 3).applyTo(parent);
-		
+
 		Composite linkingComposite = new Composite(parent, SWT.NULL);
 		GridDataFactory.fillDefaults().align(GridData.FILL, GridData.FILL).grab(true, false).applyTo(linkingComposite);
 		GridLayoutFactory.fillDefaults().numColumns(3).applyTo(linkingComposite);
-		
+
 		linkCheckbox = new Button(linkingComposite, SWT.CHECK);
 		linkCheckbox.setText("연결");
 		linkCheckbox.setSelection(false);
 		GridDataFactory.fillDefaults().align(GridData.BEGINNING, GridData.FILL).grab(false, true).applyTo(linkCheckbox);
-		
+
 		t = new Text(linkingComposite, SWT.NORMAL | SWT.BORDER);
 		GridDataFactory.fillDefaults().align(GridData.FILL, GridData.FILL).grab(true, true).applyTo(t);
-		
+
 		gotoBtn = new Button(linkingComposite, SWT.PUSH);
 		gotoBtn.setText("open");
 		gotoBtn.addSelectionListener(new SelectionAdapter() {
@@ -111,15 +111,15 @@ public class JavaEditorListeningView extends ViewPart {
 				}
 			}
 		});
-		
-		
-		
+
+
+
 		sourceViewer = new ProjectionViewer(parent, new VerticalRuler(12), null, false
 				,  SWT.FULL_SELECTION  | SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
 		GridDataFactory.fillDefaults().align(GridData.FILL, GridData.FILL).grab(true, true).applyTo(sourceViewer.getControl());
-		
+
 		new MybatisSourceViewerConfiguration(colorProvider, sourceViewer).setup();
-		
+
 		ISelectionService ss = getSite().getWorkbenchWindow().getSelectionService();
 		ss.addPostSelectionListener( sl);
 	}
@@ -146,19 +146,19 @@ public class JavaEditorListeningView extends ViewPart {
 	private ISelectionListener sl = new ISelectionListener() {
 		@Override
 		public void selectionChanged(final IWorkbenchPart part, final ISelection sel) {
-			if(!javaEditorId.equals( part.getSite().getId())){  
+			if(!linkCheckbox.getSelection()){
 				return;
 			}
-			if(!linkCheckbox.getSelection()){
+			if(!javaEditorId.equals( part.getSite().getId())){
 				return;
 			}
 
 			executor.execute( new LinkJobRunnable(sel, part) );
 		}
 	};
-	
-	
-	
+
+
+
 	private class LinkJobRunnable implements Runnable{
 		private ISelection sel;
 		private IWorkbenchPart part;
@@ -178,7 +178,7 @@ public class JavaEditorListeningView extends ViewPart {
 				selectedProj = ifile.getProject();
 				ICompilationUnit icu = JavaCore.createCompilationUnitFrom(ifile);
 				int pos = ts.getOffset() + ts.getLength();
-				
+
 				try {
 	                IJavaElement je = icu.getElementAt(pos);
 	                boolean isProcessed = false;
@@ -187,42 +187,42 @@ public class JavaEditorListeningView extends ViewPart {
 	    				IType type = (IType) m.getParent();
 	    				String name = type.getFullyQualifiedName();
 //	    				System.out.printf("== full type name : %s \n", name);
-	    				
+
 	    				if(name.indexOf(".dao.")>-1){
 	    					isProcessed = true;
 	    					runInDao();
 	    				}
-	    				
+
 	                }
 	                if(!isProcessed){
 	                	runInService();
 	                }
-	                
+
                 } catch (JavaModelException e) {
 	                e.printStackTrace();
                 }
-				
+
 			}
 		} // end run
-		
-		
+
+
 		void runInDao() throws JavaModelException{
 			ITextSelection ts = (ITextSelection)sel;
-			
+
 			CompilationUnitEditor cud = (CompilationUnitEditor)part;
 			IFile ifile = (IFile)cud.getEditorInput().getAdapter(IFile.class);
 			ICompilationUnit icu = JavaCore.createCompilationUnitFrom(ifile);
 			int pos = ts.getOffset() + ts.getLength();
-			
+
 			IMethod m = (IMethod) icu.getElementAt(pos);
 			IType type = (IType) m.getParent();
 			String name = type.getFullyQualifiedName();
 //			System.out.printf("== full type name : %s \n", name);
-			
+
 			if(name.indexOf(".dao.")==-1){
 				return;
 			}
-			
+
 			CompilationUnit cu = HongJdtHelper.getCompilationUnit(icu);
 			if(!type.isInterface()){
 				CompilationUnit implCu = cu;
@@ -239,9 +239,9 @@ public class JavaEditorListeningView extends ViewPart {
 				exeIFileAndId(ifileAndId);
 			}
 		}
-		
-		
-		
+
+
+
 		void runInService(){
 			ITextSelection ts = (ITextSelection)sel;
 
@@ -250,7 +250,7 @@ public class JavaEditorListeningView extends ViewPart {
 			CompilationUnit cu = HongJdtHelper.getCompilationUnit(ifile);
 			int pos = ts.getOffset() + ts.getLength();
 			MethodInvocation mi = HongJdtHelper.resolveMethodInvocationByPosition(cu, pos);
-			
+
 			if(mi!=null){
 				final IMethodBinding mb = mi.resolveMethodBinding();
 				final ITypeBinding tb = mb.getDeclaringClass();
@@ -263,29 +263,29 @@ public class JavaEditorListeningView extends ViewPart {
 								t.setText("");
 								sourceViewer.getTextWidget().setText("");
 							}
-						});									
+						});
 						return;
 					}
 					CompilationUnit implCu = HongJdtHelper.getCompilationUnit(implFile);
 					MethodDeclaration implMethod = HongJdtHelper.resolveMethodInThisClass(implCu, mb);
 					final IFileAndId ifileAndId = HongMybatisHelper.extractMybatisXmlFileAndId(implFile.getProject(), implMethod);
-					
+
 					exeIFileAndId(ifileAndId);
 				}
 			}
 		}
-		
-		
+
+
 		private void exeIFileAndId(final IFileAndId ifileAndId){
 			if(ifileAndId!=null && ifileAndId.inputParam!=null && ifileAndId.ifile!=null && ifileAndId.id==null){
 				Display.getDefault().syncExec(new Runnable(){
 					@Override
 					public void run() {
-						t.setText(ifileAndId.inputParam); 
+						t.setText(ifileAndId.inputParam);
 						sourceViewer.getTextWidget().setText("");
 					}
 				});
-				
+
 			}else if(ifileAndId!=null && ifileAndId.ifile!=null && ifileAndId.id!=null){
 				IFile xmlFile = ifileAndId.ifile;
 				String id = ifileAndId.id;
@@ -294,7 +294,7 @@ public class JavaEditorListeningView extends ViewPart {
 					Display.getDefault().syncExec(new Runnable(){
 						@Override
 						public void run() {
-							t.setText(ifileAndId.inputParam); 
+							t.setText(ifileAndId.inputParam);
 							sourceViewer.getTextWidget().setText(contents);
 						}
 					});
@@ -304,5 +304,5 @@ public class JavaEditorListeningView extends ViewPart {
 			}
 		}
 	}
-	
+
 }
